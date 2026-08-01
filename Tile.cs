@@ -17,18 +17,20 @@ namespace PacManGame
         public int DimX { get; set; }
         public int DimY { get; set; }
         public TileType Type { get; set; }
+
         public Tile(int Dim_x, int Dim_y, TileType type)
         {
             DimX = Dim_x;
             DimY = Dim_y;
             Type = type;
         }
+
         public bool IsWalkable()
         {
             return this.Type != TileType.Wall && this.Type != TileType.DeadSpace;
         }
 
-        public bool HasPellet()
+        public bool IsPellet()
         {
             return this.Type == TileType.Dot || this.Type == TileType.PowerPellet;
         }
