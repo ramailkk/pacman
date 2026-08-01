@@ -1,117 +1,81 @@
 using System;
+using System.Collections.Generic;
 
 namespace PacManGame
 {
     public class Board
     {
-        public int[][] board;
-        public int score;
-        public int dots;
-
-        public Board(int[][] board)
+        private static readonly Dictionary<int, TileType> IntToTile = new()
         {
-            this.board = board;
-            this.score = 0;
-            this.dots = CountDots();
+            { 0, TileType.Empty },
+            { 1, TileType.Wall },
+            { 2, TileType.Dot },
+            { 3, TileType.PowerPellet },
+            { 4, TileType.Fruit },
+            { 5, TileType.GhostHouse },
+            { 6, TileType.DeadSpace }
+        };
+
+        public int PixelHeight { get; }
+        public int PixelWidth { get; }
+        public int Score { get; set; }
+        public int PelletCounter { get; private set; }
+        public int DotCounter { get; private set; }
+        public Tile[,] Grid { get; private set; }
+
+        public Board(int[][] reference, int pixelHeight = 28, int pixelWidth = 28)
+        {
+            PixelHeight = pixelHeight;
+            PixelWidth = pixelWidth;
+            Score = 0;
+            PelletCounter = 0;
+            DotCounter = 0;
+            Grid = SetupBoard(reference);
         }
 
-        // 3 conditions of eating -> dot/fruit/ghosts
-        public void IncrementScore(string condition)
+        private Tile[,] SetupBoard(int[][] reference)
         {
-            if (condition == "dot")
-            {
-                score = score + 10;
-            }
-        }
+            Tile[,] tiles = new Tile[reference.Length, reference[0].Length];
 
-        public void DecrementDot()
-        {
-            dots = dots - 1;
-            if (dots == 0)
+            for (int i = 0; i < tiles.GetLength(0); i++)  // Rows
             {
-                // END LEVEL HERE
-            }
-        }
-
-        public int CountDots()
-        {
-            int c = 0;
-            for (int i = 0; i < board.Length; i++)
-            {
-                for (int j = 0; j < board[0].Length; j++)
+                for (int j = 0; j < tiles.GetLength(1); j++)  // Columns
                 {
-                    if (board[i][j] == 0)
-                        c++;
+                    int value = reference[i][j];
+                    TileType type = IntToTile[value];
+                    tiles[i, j] = new Tile(PixelHeight, PixelWidth, type);
+
+                    if (type == TileType.Dot)
+                        DotCounter++;
+                    else if (type == TileType.PowerPellet)
+                        PelletCounter++;
                 }
             }
-            return c;
+            return tiles;
         }
 
         public void DisplayBoard()
         {
-            for (int i = 0; i < board.Length; i++)
+            for (int i = 0; i < Grid.GetLength(0); i++)
             {
-                Console.WriteLine();
-                for (int j = 0; j < board[0].Length; j++)
+                for (int j = 0; j < Grid.GetLength(1); j++)
                 {
-                    Console.Write(board[i][j]);
+                    char symbol = Grid[i, j].Type switch
+                    {
+                        TileType.Empty => ' ',
+                        TileType.Wall => '#',
+                        TileType.Dot => '.',
+                        TileType.PowerPellet => 'O',
+                        TileType.Fruit => 'F',
+                        TileType.GhostHouse => 'G',
+                        TileType.DeadSpace => 'X',
+                        _ => '?'
+                    };
+                    Console.Write(symbol);
                 }
+                Console.WriteLine();
             }
-        }
-
-        public bool IsWalkable(int x, int y)
-        {
-            if (x < 0 || x > board.Length || y < 0 || y > board[0].Length)
-                return false;
-            if (board[x][y] == 1)
-                return false;
-            return true;
-        }
-
-        public static void Main(string[] args)
-        {
-            int[][] board = new int[][]
-            {
-                new int[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 2, 2, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 2, 2, 2, 2, 2, 2, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 2, 2, 2, 2, 2, 2, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1},
-                new int[] {1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1},
-                new int[] {1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1},
-                new int[] {1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-                new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                new int[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-            };
-
-            Board game = new Board(board);
-            game.DisplayBoard();
+            Console.WriteLine($"Dots: {DotCounter}, Power Pellets: {PelletCounter}");
         }
     }
 }

@@ -1,0 +1,33 @@
+# Build outputs
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.dll
+*.exe
+*.pdb
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+
+# VS Code
+.vscode/
+
+# NuGet
+packages/
+*.nupkg
+
+# User settings
+*.config.user
+launchSettings.json
+appsettings.Development.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.log
+*.tmp
