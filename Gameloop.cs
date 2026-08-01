@@ -10,6 +10,15 @@ namespace PacManGame
         public const double SecondsPerTick = 1.0 / TicksPerSecond;
         private bool running;
 
+        public Board board;
+        public Actor actor;
+
+        public GameLoop(Board board, Actor actor)
+        {
+            this.board = board;
+            this.actor = actor;
+        }
+
         public void Run()
         {
             running = true;
@@ -43,7 +52,7 @@ namespace PacManGame
 
         private void Update()
         {
-            // called at a fixed 60 ticks/second, regardless of render speed
+            actor.Move();
         }
 
         private void Render()

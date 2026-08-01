@@ -44,7 +44,7 @@ namespace PacManGame
 
             Board board1= new(board, 8, 8);
             Actor actor = new Actor(5,5,2,board1);
-            GameLoop game = new GameLoop();
+            GameLoop game = new GameLoop(board1, actor);
             game.Run();
 
         }
