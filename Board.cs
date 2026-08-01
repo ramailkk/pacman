@@ -25,7 +25,6 @@ namespace PacManGame
 
         public Board(int[][] reference, int tileWidth, int tileHeight)
         {
-
             TileHeight = tileHeight;
             TileWidth = tileWidth;
             Score = 0;
@@ -54,8 +53,6 @@ namespace PacManGame
             }
             return tiles;
         }
-
-
 
         public void DisplayBoard()
         {

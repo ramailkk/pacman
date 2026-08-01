@@ -1,6 +1,5 @@
 namespace PacManGame
 {
-
      public enum Direction
     {
         Up,
@@ -8,7 +7,6 @@ namespace PacManGame
         Left,
         Right
     }
-
     public class Actor
     {
         public int PixelPosX;
@@ -19,56 +17,60 @@ namespace PacManGame
 
         public Actor(int TilePosX, int TilePosY, int speed, Board board)
         {
-            this.PixelPosX = ConvertTileCordinatesToPixel(TilePosX, board.TileHeight)+ (board.TileHeight / 2); ;
-            this.PixelPosY = ConvertTileCordinatesToPixel(TilePosY, board.TileWidth)+ (board.TileWidth / 2); ;
+            this.PixelPosX = ConvertTileCordinatesToPixel(TilePosX, board.TileWidth);
+            this.PixelPosY = ConvertTileCordinatesToPixel(TilePosY, board.TileHeight);
             this.board = board;
             this.speed = speed;
         }
 
-        public void MoveActor()
+        public virtual void Move()
         {
-            switch (this.direction)
+            switch (direction)
             {
                 case Direction.Up:
-                    Tile NewTileX = board.Grid[ConvertPixelCordinatesToTile(PixelPosX-1, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY, board.TileWidth)];
-                    if (NewTileX.IsWalkable())
-                        PixelPosX--;
+                    int Y = ConvertPixelCordinatesToTile(PixelPosY-1, board.TileHeight);
+                    Tile NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileWidth), Y];
+                    if (NewTileY.IsWalkable())
+                        PixelPosY = ConvertTileCordinatesToPixel(Y, board.TileHeight);
                     break;
 
                 case Direction.Down:
-                    NewTileX = board.Grid[ConvertPixelCordinatesToTile(PixelPosX+1, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY, board.TileWidth)];
-                    if (NewTileX.IsWalkable())
-                        PixelPosX++;
+                    Y = ConvertPixelCordinatesToTile(PixelPosY+1, board.TileHeight);
+                    NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileWidth),  Y];
+                    if (NewTileY.IsWalkable())
+                        PixelPosY = ConvertTileCordinatesToPixel(Y, board.TileHeight);
                     break;
 
                 case Direction.Left:
-                    Tile NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY-1, board.TileWidth)];
-                    if (NewTileY.IsWalkable())
-                        PixelPosY--;
+                    int X = ConvertPixelCordinatesToTile(PixelPosX-1, board.TileWidth);
+                    Tile NewTileX = board.Grid[X,  ConvertPixelCordinatesToTile(PixelPosY, board.TileHeight)];
+                    if (NewTileX.IsWalkable())
+                        PixelPosX = ConvertTileCordinatesToPixel(X, board.TileWidth);
                     break;
 
                 case Direction.Right:
-                    NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY+1, board.TileWidth)];
-                    if (NewTileY.IsWalkable())
-                        PixelPosY++;
+                    X = ConvertPixelCordinatesToTile(PixelPosX+1, board.TileWidth);
+                    NewTileX = board.Grid[X,  ConvertPixelCordinatesToTile(PixelPosY, board.TileHeight)];
+                    if (NewTileX.IsWalkable())
+                        PixelPosX = ConvertTileCordinatesToPixel(X, board.TileWidth);
                     break;
                 default:
                     return;
-
             }
         }
 
-        public static int ConvertPixelCordinatesToTile(int PixelPos, int Dim)
+        public int ConvertPixelCordinatesToTile(int PixelPos, int Dim)
         {
-            return PixelPos / Dim;
+            return (PixelPos / Dim) + (Dim / 2);
         }
 
-        public static int ConvertTileCordinatesToPixel(int TilePos, int Dim)
-
+        public int ConvertTileCordinatesToPixel(int TilePos, int Dim)
         {
             return TilePos * Dim;
         }
-
-
+        public void ChangeDirection(Direction direction)
+        {
+            this.direction = direction;
+        }
     }
 }

@@ -42,8 +42,11 @@ namespace PacManGame
                 new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
             ];
 
-            Board game = new(board,8,8);
-            game.DisplayBoard();
+            Board board1= new(board, 8, 8);
+            Actor actor = new Actor(5,5,2,board1);
+            GameLoop game = new GameLoop();
+            game.Run();
+
         }
     }
 }

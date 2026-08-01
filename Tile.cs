@@ -10,24 +10,27 @@ namespace PacManGame
         GhostHouse = 5,
         DeadSpace = 6
     }
-
-
     public class Tile
     {
-        public int DimX { get; set; }
-        public int DimY { get; set; }
+        public int TileHeight { get; set; }
+        public int TileWidth { get; set; }
         public TileType Type { get; set; }
 
-        public Tile(int Dim_x, int Dim_y, TileType type)
+        public Tile(int tileHeight, int tileWidth, TileType type)
         {
-            DimX = Dim_x;
-            DimY = Dim_y;
+            TileHeight = tileHeight;
+            TileWidth = tileWidth;
             Type = type;
         }
 
         public bool IsWalkable()
         {
             return this.Type != TileType.Wall && this.Type != TileType.DeadSpace;
+        }
+
+        public bool IsWalkableForPacMan()
+        {
+            return IsWalkable() && this.Type != TileType.GhostHouse;
         }
 
         public bool IsPellet()

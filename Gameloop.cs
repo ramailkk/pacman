@@ -8,7 +8,6 @@ namespace PacManGame
     {
         public const double TicksPerSecond = 60.0;
         public const double SecondsPerTick = 1.0 / TicksPerSecond;
-
         private bool running;
 
         public void Run()
