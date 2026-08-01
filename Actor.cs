@@ -1,35 +1,61 @@
 namespace PacManGame
 {
+
+     public enum Direction
+    {
+        Up,
+        Down,
+        Left,
+        Right
+    }
+
     public class Actor
     {
-        public Tile currentTile;
-        public int TilePosX;
-        public int TilePosY;
-        public int speed;
-        public int xDirection;  // -1 FOR LEFT <- and 1 FOR RIGHT ->
-        public int yDirection;  // -1 FOR DOWN V  and 1 FOR UP ^
-        protected Board board;
         public int PixelPosX;
         public int PixelPosY;
-        public int CenterPosX;
-        public int CenterPosY;
+        public int speed;
+        public Direction direction;
+        protected Board board;
 
         public Actor(int TilePosX, int TilePosY, int speed, Board board)
-         {
-            this.TilePosX = TilePosX;
-            this.TilePosY = TilePosY;
+        {
+            this.PixelPosX = ConvertTileCordinatesToPixel(TilePosX, board.TileHeight)+ (board.TileHeight / 2); ;
+            this.PixelPosY = ConvertTileCordinatesToPixel(TilePosY, board.TileWidth)+ (board.TileWidth / 2); ;
             this.board = board;
             this.speed = speed;
-            this.currentTile = board.Grid[TilePosX, TilePosY];
-            this.CenterPosX = currentTile.DimX / 2;
-            this.CenterPosY = currentTile.DimY / 2;
-            this.PixelPosX = ConvertTileCordinatesToPixel(TilePosX, currentTile.DimX)+ CenterPosX;
-            this.PixelPosY = ConvertTileCordinatesToPixel(TilePosY, currentTile.DimY)+ CenterPosY;
         }
 
-        public void MoveActorInOn()
+        public void MoveActor()
         {
+            switch (this.direction)
+            {
+                case Direction.Up:
+                    Tile NewTileX = board.Grid[ConvertPixelCordinatesToTile(PixelPosX-1, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY, board.TileWidth)];
+                    if (NewTileX.IsWalkable())
+                        PixelPosX--;
+                    break;
 
+                case Direction.Down:
+                    NewTileX = board.Grid[ConvertPixelCordinatesToTile(PixelPosX+1, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY, board.TileWidth)];
+                    if (NewTileX.IsWalkable())
+                        PixelPosX++;
+                    break;
+
+                case Direction.Left:
+                    Tile NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY-1, board.TileWidth)];
+                    if (NewTileY.IsWalkable())
+                        PixelPosY--;
+                    break;
+
+                case Direction.Right:
+                    NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileHeight),  ConvertPixelCordinatesToTile(PixelPosY+1, board.TileWidth)];
+                    if (NewTileY.IsWalkable())
+                        PixelPosY++;
+                    break;
+                default:
+                    return;
+
+            }
         }
 
         public static int ConvertPixelCordinatesToTile(int PixelPos, int Dim)
@@ -42,7 +68,6 @@ namespace PacManGame
         {
             return TilePos * Dim;
         }
-
 
 
     }

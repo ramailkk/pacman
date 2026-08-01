@@ -16,17 +16,18 @@ namespace PacManGame
             { 6, TileType.DeadSpace }
         };
 
-        public int PixelHeight { get; }
-        public int PixelWidth { get; }
+        public int TileHeight { get; }
+        public int TileWidth { get; }
         public int Score { get; set; }
         public int PelletCounter { get; private set; }
         public int DotCounter { get; private set; }
         public Tile[,] Grid { get; private set; }
 
-        public Board(int[][] reference, int pixelHeight = 28, int pixelWidth = 28)
+        public Board(int[][] reference, int tileWidth, int tileHeight)
         {
-            PixelHeight = pixelHeight;
-            PixelWidth = pixelWidth;
+
+            TileHeight = tileHeight;
+            TileWidth = tileWidth;
             Score = 0;
             PelletCounter = 0;
             DotCounter = 0;
@@ -43,7 +44,7 @@ namespace PacManGame
                 {
                     int value = reference[i][j];
                     TileType type = IntToTile[value];
-                    tiles[i, j] = new Tile(PixelHeight, PixelWidth, type);
+                    tiles[i, j] = new Tile(TileHeight, TileWidth, type);
 
                     if (type == TileType.Dot)
                         DotCounter++;
