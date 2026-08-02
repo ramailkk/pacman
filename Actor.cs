@@ -9,29 +9,14 @@ namespace PacManGame
         public static readonly Vector2D Left = new Vector2D(-1, 0);
         public static readonly Vector2D Right = new Vector2D(1, 0);
         public static readonly Vector2D Zero = new Vector2D(0, 0);
-
-        public static Vector2D operator +(Vector2D a, Vector2D b)
-        {
-            return new Vector2D(a.X + b.X, a.Y + b.Y);
-        }
-
-        public static Vector2D operator *(Vector2D a, int scalar)
-        {
-            return new Vector2D(a.X * scalar, a.Y * scalar);
-        }
     }
-
-
-    public class Actor
-    {
+    public class Actor{
         public int PixelPosX;
         public int PixelPosY;
         public int speed;
         public Vector2D direction;
         protected Board board;
-
-        public Actor(int TilePosX, int TilePosY, int speed, Board board)
-        {
+        public Actor(int TilePosX, int TilePosY, int speed, Board board){
             this.PixelPosX = ConvertTileCordinatesToPixel(TilePosX, board.TileWidth);
             this.PixelPosY = ConvertTileCordinatesToPixel(TilePosY, board.TileHeight);
             this.board = board;
@@ -50,15 +35,35 @@ namespace PacManGame
             // Convert to tile coordinates
             int tileX = ConvertPixelCordinatesToTile(newPixelX, board.TileWidth);
             int tileY = ConvertPixelCordinatesToTile(newPixelY, board.TileHeight);
+            // Check also Actor outline collisions
 
-            // Check if the target tile is walkable
-            Tile targetTile = board.Grid[tileX, tileY];
-            if (targetTile.IsWalkable())
+            int outlineTileX = ConvertPixelCordinatesToTile(newPixelX-1 + (board.TileWidth / 2 * direction.X), board.TileWidth);
+            int outlineTileY = ConvertPixelCordinatesToTile(newPixelY-1 + (board.TileHeight / 2 * direction.Y), board.TileHeight);
+
+            Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
+            if (!IsTileWalkable(outlineTile))
             {
-                PixelPosX = newPixelX;
-                PixelPosY = newPixelY;
+                return;
+            }
+
+            Tile targetTile = board.Grid[tileY, tileX];
+
+
+            if (IsTileWalkable(targetTile))
+            {
+                if (direction.X == 0)
+                {
+                    PixelPosX = ConvertTileCordinatesToPixel(tileX,board.TileWidth);
+                    PixelPosY = newPixelY;
+                }
+                else
+                {
+                    PixelPosX = newPixelX;
+                    PixelPosY = ConvertTileCordinatesToPixel(tileY,board.TileHeight);
+                }
             }
         }
+
 
         public bool IsCollisionWithActor(Actor other)
         {
@@ -70,21 +75,17 @@ namespace PacManGame
             return (myTileX == otherTileX) && (myTileY == otherTileY);
         }
 
-        public int ConvertPixelCordinatesToTile(int PixelPos, int Dim)
-        {
+        public int ConvertPixelCordinatesToTile(int PixelPos, int Dim){
             return PixelPos / Dim;
         }
 
-        public int ConvertTileCordinatesToPixel(int TilePos, int Dim)
-        {
+        public int ConvertTileCordinatesToPixel(int TilePos, int Dim){
             return (TilePos * Dim) + (Dim/2);
         }
-        public void ChangeDirection(Vector2D direction)
-        {
+        public virtual void ChangeDirection(Vector2D direction){
             this.direction = direction;
         }
-        protected virtual bool IsTileWalkable(Tile tile)
-        {
+        protected virtual bool IsTileWalkable(Tile tile){
             return tile.IsWalkable();
         }
     }

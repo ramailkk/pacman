@@ -1,9 +1,17 @@
-﻿using System;
+using System;
+using Raylib_cs;
 
 namespace PacManGame
 {
     class Program
     {
+        // Internal simulation tile size (matches Actor's pixel-coordinate math).
+        // Don't change this without also re-checking Actor's movement/collision math.
+        const int TileSize = 8;
+
+        // Purely visual multiplier so an 8px tile isn't a postage stamp on screen.
+        const float DrawScale = 3f;
+
         static void Main(string[] args)
         {
             int[][] board =
@@ -42,11 +50,98 @@ namespace PacManGame
                 new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
             ];
 
-            Board board1= new(board, 8, 8);
-            Actor actor = new Actor(5,5,2,board1);
-            GameLoop game = new GameLoop(board1, actor);
-            game.Run();
+            Board board1 = new(board, TileSize, TileSize);
 
+            // Row 23, col 14 is an open dot tile below the ghost house — safe spawn.
+            PacMan pacman = new PacMan(15, 23, 2, board1, 3);
+
+            int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
+            int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 40; // room for HUD
+
+            Raylib.InitWindow(screenWidth, screenHeight, "PacMan - Raylib Test Harness");
+            Raylib.SetTargetFPS(60);
+
+            while (!Raylib.WindowShouldClose())
+            {
+                HandleInput(pacman);
+                pacman.Move();
+                Raylib.BeginDrawing();
+                Raylib.ClearBackground(Color.Black);
+
+                DrawBoard(board1);
+                DrawPacMan(pacman);
+                DrawHud(board1, pacman);
+
+                Raylib.EndDrawing();
+            }
+
+            Raylib.CloseWindow();
+        }
+
+        static void HandleInput(PacMan pacman)
+        {
+            if (Raylib.IsKeyDown(KeyboardKey.Up) || Raylib.IsKeyDown(KeyboardKey.W))
+                pacman.ChangeBufferDirection(Vector2D.Up);
+            else if (Raylib.IsKeyDown(KeyboardKey.Down) || Raylib.IsKeyDown(KeyboardKey.S))
+                pacman.ChangeBufferDirection(Vector2D.Down);
+            else if (Raylib.IsKeyDown(KeyboardKey.Left) || Raylib.IsKeyDown(KeyboardKey.A))
+                pacman.ChangeBufferDirection(Vector2D.Left);
+            else if (Raylib.IsKeyDown(KeyboardKey.Right) || Raylib.IsKeyDown(KeyboardKey.D))
+                pacman.ChangeBufferDirection(Vector2D.Right);
+        }
+
+        static void DrawBoard(Board board)
+        {
+            for (int row = 0; row < board.Grid.GetLength(0); row++)
+            {
+                for (int col = 0; col < board.Grid.GetLength(1); col++)
+                {
+                    Tile tile = board.Grid[row, col];
+
+                    float x = col * TileSize * DrawScale;
+                    float y = row * TileSize * DrawScale;
+                    float size = TileSize * DrawScale;
+
+                    switch (tile.Type)
+                    {
+                        case TileType.Wall:
+                            Raylib.DrawRectangle((int)x, (int)y, (int)size, (int)size, Color.DarkBlue);
+                            break;
+                        case TileType.Dot:
+                            Raylib.DrawCircle((int)(x + size / 2), (int)(y + size / 2), size * 0.1f, Color.Beige);
+                            break;
+                        case TileType.PowerPellet:
+                            Raylib.DrawCircle((int)(x + size / 2), (int)(y + size / 2), size * 0.25f, Color.Beige);
+                            break;
+                        case TileType.Fruit:
+                            Raylib.DrawCircle((int)(x + size / 2), (int)(y + size / 2), size * 0.3f, Color.Red);
+                            break;
+                        case TileType.GhostHouse:
+                            Raylib.DrawRectangle((int)x, (int)y, (int)size, (int)size, new Color(30, 30, 30, 255));
+                            break;
+                        case TileType.DeadSpace:
+                        case TileType.Empty:
+                        default:
+                            break; // nothing to draw
+                    }
+                }
+            }
+        }
+
+        static void DrawPacMan(PacMan pacman)
+        {
+            float screenX = pacman.PixelPosX * DrawScale;
+            float screenY = pacman.PixelPosY * DrawScale;
+            float radius = TileSize * DrawScale * 0.45f;
+
+            Raylib.DrawCircle((int)screenX, (int)screenY, radius, Color.Yellow);
+        }
+
+        static void DrawHud(Board board, PacMan pacman)
+        {
+            int hudY = board.Grid.GetLength(0) * TileSize * (int)DrawScale + 5;
+            string text = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.DotCounter}";
+            Raylib.DrawText(text, 10, hudY, 20, Color.White);
         }
     }
 }
