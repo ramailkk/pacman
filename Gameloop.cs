@@ -57,7 +57,7 @@ namespace PacManGame
 
         private void Render()
         {
-            // called as often as the loop can manage; draw current state here
+            board.DisplayBoard();
         }
     }
 }

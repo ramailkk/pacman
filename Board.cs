@@ -53,6 +53,16 @@ namespace PacManGame
             }
             return tiles;
         }
+        public void UpdateDotScore()
+        {
+            Score += 10;
+            DotCounter--;
+        }
+        public void UpdatePowerScore()
+        {
+            Score += 50;
+            PelletCounter--;
+        }
 
         public void DisplayBoard()
         {

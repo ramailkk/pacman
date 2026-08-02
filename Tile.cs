@@ -33,12 +33,16 @@ namespace PacManGame
             return IsWalkable() && this.Type != TileType.GhostHouse;
         }
 
-        public bool IsPellet()
+        public bool HasDot()
         {
-            return this.Type == TileType.Dot || this.Type == TileType.PowerPellet;
+            return this.Type == TileType.Dot;
+        }
+        public bool HasPowerPellet()
+        {
+            return this.Type == TileType.PowerPellet;
         }
 
-        public void RemovePellet()
+        public void RemoveDotOrPellet()
         {
             this.Type = TileType.Empty;
         }

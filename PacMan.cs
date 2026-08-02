@@ -1,51 +1,45 @@
 namespace PacManGame
 {
-    public class PacMan : Actor
+    public class PacMan(int x, int y, int speed, Board board, int lives) : Actor(x, y, speed, board)
     {
-        public int lives;
-        public int multiplier;
-        public bool spree;
+        public int LIVES = lives;
+        public int MULT = 1;
+        public bool SPREE = false;
 
-        public PacMan(int x, int y, int speed, Board board, int lives) : base(x, y, speed, board)
+        protected override bool IsTileWalkable(Tile tile)
         {
-            this.lives = lives;
-            this.multiplier = 1;
-            this.spree = false;
+            return tile.IsWalkableForPacMan();
         }
-        public void Move()
+
+        public override void Move()
         {
-            switch (direction)
+            base.Move();
+            CheckConsumables();
+        }
+        public void CheckConsumables()
+        {
+            int tileX = ConvertPixelCordinatesToTile(this.PixelPosX, board.TileWidth);
+            int tileY = ConvertPixelCordinatesToTile(this.PixelPosY, board.TileHeight);
+            Tile tile = this.board.Grid[tileX, tileY];
+
+            if (tile.HasPowerPellet())
             {
-                case Direction.Up:
-                    int Y = ConvertPixelCordinatesToTile(PixelPosY-1, board.TileHeight);
-                    Tile NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileWidth), Y];
-                    if (NewTileY.IsWalkableForPacMan())
-                        PixelPosY = ConvertTileCordinatesToPixel(Y, board.TileHeight);
-                    break;
+                tile.RemoveDotOrPellet();
+                board.UpdatePowerScore();
+            }
+            else if (tile.HasDot())
+            {
+                // Check first if the pixel position of PacMan is centered to the Tile
+                int CenteredX = ConvertTileCordinatesToPixel(tileX, board.TileWidth);
+                int CenteredY = ConvertTileCordinatesToPixel(PixelPosY, board.TileHeight);
 
-                case Direction.Down:
-                    Y = ConvertPixelCordinatesToTile(PixelPosY+1, board.TileHeight);
-                    NewTileY = board.Grid[ConvertPixelCordinatesToTile(PixelPosX, board.TileWidth),  Y];
-                    if (NewTileY.IsWalkableForPacMan())
-                        PixelPosY = ConvertTileCordinatesToPixel(Y, board.TileHeight);
-                    break;
-
-                case Direction.Left:
-                    int X = ConvertPixelCordinatesToTile(PixelPosX-1, board.TileWidth);
-                    Tile NewTileX = board.Grid[X,  ConvertPixelCordinatesToTile(PixelPosY, board.TileHeight)];
-                    if (NewTileX.IsWalkableForPacMan())
-                        PixelPosX = ConvertTileCordinatesToPixel(X, board.TileWidth);
-                    break;
-
-                case Direction.Right:
-                    X = ConvertPixelCordinatesToTile(PixelPosX+1, board.TileWidth);
-                    NewTileX = board.Grid[X,  ConvertPixelCordinatesToTile(PixelPosY, board.TileHeight)];
-                    if (NewTileX.IsWalkableForPacMan())
-                        PixelPosX = ConvertTileCordinatesToPixel(X, board.TileWidth);
-                    break;
-                default:
-                    return;
+                if (CenteredX == this.PixelPosX && CenteredY == this.PixelPosY)
+                {
+                    tile.RemoveDotOrPellet();
+                    board.UpdateDotScore();
+                }
             }
         }
     }
 }
+
