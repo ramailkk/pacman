@@ -9,6 +9,8 @@ namespace PacManGame
         public static readonly Vector2D Left = new Vector2D(-1, 0);
         public static readonly Vector2D Right = new Vector2D(1, 0);
         public static readonly Vector2D Zero = new Vector2D(0, 0);
+        public readonly Vector2D Reverse() => new Vector2D(-X, -Y);
+
     }
     public class Actor{
         public int PixelPosX;
@@ -22,42 +24,6 @@ namespace PacManGame
             (this.PixelPosX,this.PixelPosY) = ConvertTileToPixel(TilePosX,TilePosY);
             this.speed = speed;
         }
-
-         public virtual void Move()
-        {
-            if (direction.Equals(Vector2D.Zero))
-                return;
-
-            // Calculate new pixel position based on direction
-            int newPixelX = PixelPosX + (direction.X);
-            int newPixelY = PixelPosY + (direction.Y);
-            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
-
-            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
-
-            int outlinePixelX = newPixelX + (board.TileWidth / 2 * direction.X);
-            int outlinePixelY = newPixelY + (board.TileHeight / 2 * direction.Y);
-
-            // Wrap outline pixels too (important if offset pushes beyond edges)
-            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
-            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
-            Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
-
-            if (!IsTileWalkable(outlineTile))
-                return;
-
-            Tile targetTile = board.Grid[tileY, tileX];
-
-            if (IsTileWalkable(targetTile))
-            {
-               (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX,tileY);
-                if (direction.X == 0)
-                    PixelPosY = newPixelY;
-                else
-                    PixelPosX = newPixelX;
-            }
-        }
-
 
         public bool IsCollisionWithActor(Actor other)
         {
@@ -85,6 +51,7 @@ namespace PacManGame
 
             return (wrappedX, wrappedY);
         }
+
         public virtual void ChangeDirection(Vector2D direction){
             this.direction = direction;
         }

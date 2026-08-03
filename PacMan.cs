@@ -14,7 +14,7 @@ public class PacMan : Actor {
             this.bufferDirection = Vector2D.Zero;
             this.direction = Vector2D.Down;
         }
-        public override void Move(){
+        public void Move(){
             DecideDirection();
             // Calculate new pixel position based on direction
             int newPixelX = PixelPosX + (direction.X);
