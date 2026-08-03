@@ -79,6 +79,10 @@ public class PacMan : Actor {
         protected override bool IsTileWalkable(Tile tile){
             return tile.IsWalkableForPacMan();
         }
+        public (int TileX, int TileY) GetPacManTile()
+        {
+            return ConvertPixelToTile(PixelPosX, PixelPosY);
+        }
 
         public void CheckConsumables(){
             (int tileX, int tileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);

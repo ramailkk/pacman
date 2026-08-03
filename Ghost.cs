@@ -13,12 +13,18 @@ namespace PacManGame
     {
         private Dictionary<ModeType, (int X, int Y)> modeTargetTiles;
         public ModeType CurrentMode;
-        public Ghost(int TilePosX, int TilePosY, int speed, Board board, int ScatterTileX, int ScatterTileY, int FrightTileX, int FrightTileY) : base(TilePosX, TilePosY, speed, board)
+        public PacMan PacMan;
+        private Vector2D pendingDirection = Vector2D.Zero;
+        private int pendingTileX, pendingTileY;
+        public (int X, int Y) ScatterTarget => modeTargetTiles[ModeType.Scatter];
+
+        public Ghost(int TilePosX, int TilePosY, int speed, Board board, int ScatterTileX, int ScatterTileY, int FrightTileX, int FrightTileY, PacMan pacMan) : base(TilePosX, TilePosY, speed, board)
         {
+            PacMan = pacMan;
             modeTargetTiles = new Dictionary<ModeType, (int X, int Y)>
             {
                 { ModeType.Scatter, (ScatterTileX, ScatterTileY) },
-                { ModeType.Chase, (0, 0) },
+                { ModeType.Chase, pacMan.GetPacManTile() },
                 { ModeType.Fright, (FrightTileX, FrightTileY) },
             };
             direction = Vector2D.Left;
@@ -27,15 +33,27 @@ namespace PacManGame
 
         public void Move()
         {
-            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+        modeTargetTiles[ModeType.Chase] = PacMan.GetPacManTile();
+        (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
 
-            // if ghosts are centralized to one tile only then make a decision about the next Tile and direction
-            if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
-                this.ChangeDirection(LookAhead(TileX + direction.X, TileY + direction.Y));
+        if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
+        {
+                // Arrived at the tile a previous decision was made for — commit it now
+                if (TileX == pendingTileX && TileY == pendingTileY && !pendingDirection.Equals(Vector2D.Zero))
+                    direction = pendingDirection;
 
-            // now keep moving in whatever direction you have
-            (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
-        }
+                // Pre-decide the turn for the *next* tile, to be committed when we get there
+                int nextTileX = TileX + direction.X;
+                int nextTileY = TileY + direction.Y;
+                (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX,nextTileY);
+                pendingDirection = LookAhead(nextTileX, nextTileY);
+                pendingTileX = nextTileX;
+                pendingTileY = nextTileY;
+            }
+        // Safety net: never step with an unresolved/dead-end direction
+        if (!direction.Equals(Vector2D.Zero))
+            (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
+    }
 
         public Vector2D LookAhead(int tileX, int tileY)
         {
@@ -56,6 +74,9 @@ namespace PacManGame
             if (viableDirections.Count > 1)
                 return Intersection(tileX, tileY, viableDirections);
             // only possible direction so return just 1
+            if (viableDirections.Count == 0)
+                return Vector2D.Zero;
+
             else
                 return viableDirections[0];
         }
@@ -80,13 +101,23 @@ namespace PacManGame
         public bool IsValidTile(int tileX, int tileY, Vector2D currentDirection)
         {
             (int newTileX, int newTileY) = (tileX + currentDirection.X, tileY + currentDirection.Y);
+            (newTileX, newTileY) = CheckForTunnelTile(newTileX,newTileY);
             Tile targetTile = board.Grid[newTileY, newTileX];
             return IsTileWalkable(targetTile);
+        }
+
+        public void UpdateMode(ModeType mode)
+        {
+            CurrentMode = mode;
         }
 
         public static int ManhattanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
         {
             return (int)(Math.Abs(TileX - targetTileX) + Math.Abs(TileY - targetTileY));
         }
+        public (int X, int Y) GetTargetForMode(ModeType mode)
+    {
+        return modeTargetTiles[mode];
+    }
     }
 }

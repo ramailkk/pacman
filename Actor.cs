@@ -51,6 +51,16 @@ namespace PacManGame
 
             return (wrappedX, wrappedY);
         }
+        public (int tileX, int tileY) CheckForTunnelTile(int newTileX, int newTileY)
+        {
+            int totalTileX = board.Grid.GetLength(1);
+            int totalTileY = board.Grid.GetLength(0);
+
+            int wrappedX = ((newTileX %  totalTileX) + totalTileX) % totalTileX;
+            int wrappedY = ((newTileY % totalTileY) + totalTileY) % totalTileY;
+
+            return (wrappedX, wrappedY);
+        }
 
         public virtual void ChangeDirection(Vector2D direction){
             this.direction = direction;
