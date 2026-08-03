@@ -8,10 +8,18 @@ namespace PacManGame
         Scatter,
         Fright
     }
+
+    public enum SpeedType
+    {
+        Normal,
+        Fright,
+        Tunnel,
+    }
     // up, left, down, right preference for tiles if all are same distance away from targetTile. 
     public class Ghost : Actor
     {
         private Dictionary<ModeType, (int X, int Y)> modeTargetTiles;
+        private Dictionary<SpeedType, int> speedTypePercentage;
         public ModeType CurrentMode;
         public PacMan PacMan;
         private Vector2D pendingDirection = Vector2D.Zero;
@@ -27,17 +35,26 @@ namespace PacManGame
                 { ModeType.Chase, pacMan.GetPacManTile() },
                 { ModeType.Fright, (FrightTileX, FrightTileY) },
             };
+            speedTypePercentage = new Dictionary<SpeedType, int>
+            {
+                 { SpeedType.Normal, 80},
+                 { SpeedType.Fright, 50},
+                 { SpeedType.Tunnel, 40},
+            };
+
             direction = Vector2D.Left;
             CurrentMode = ModeType.Chase;
         }
 
         public void Move()
         {
-        modeTargetTiles[ModeType.Chase] = PacMan.GetPacManTile();
-        (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+            if (!this.CanMoveThisTick())
+                return;
+            modeTargetTiles[ModeType.Chase] = PacMan.GetPacManTile();
+            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
 
-        if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
-        {
+            if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
+            {
                 // Arrived at the tile a previous decision was made for — commit it now
                 if (TileX == pendingTileX && TileY == pendingTileY && !pendingDirection.Equals(Vector2D.Zero))
                     direction = pendingDirection;
@@ -45,20 +62,38 @@ namespace PacManGame
                 // Pre-decide the turn for the *next* tile, to be committed when we get there
                 int nextTileX = TileX + direction.X;
                 int nextTileY = TileY + direction.Y;
-                (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX,nextTileY);
-                pendingDirection = LookAhead(nextTileX, nextTileY);
+                (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX, nextTileY);
+                if (CurrentMode.Equals(ModeType.Fright))
+                    pendingDirection = LookAhead(nextTileX, nextTileY);
+                else
+                    pendingDirection = FrightLook(nextTileX, nextTileY);
                 pendingTileX = nextTileX;
                 pendingTileY = nextTileY;
             }
-        // Safety net: never step with an unresolved/dead-end direction
-        if (!direction.Equals(Vector2D.Zero))
-            (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
-    }
+            // Safety net: never step with an unresolved/dead-end direction
+            if (!direction.Equals(Vector2D.Zero))
+                (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
+        }
 
+        public Vector2D FrightLook(int tileX, int tileY)
+        {
+            // if not found at random first then go clockwise
+            var directions = new Vector2D[] { Vector2D.Up, Vector2D.Right, Vector2D.Down, Vector2D.Left};
+            var randomDirection = directions[Random.Shared.Next(directions.Length)];
+            if (!IsValidTile(tileX, tileY, randomDirection))
+            {
+                foreach (var dir in directions)
+                {
+                    if (IsValidTile(tileX, tileY, dir))
+                        return dir;
+                }
+            }
+            return randomDirection;
+        }
         public Vector2D LookAhead(int tileX, int tileY)
         {
             // up, left, down, right -> is the order we need in intersectio
-            var directions = new Vector2D[] {Vector2D.Up, Vector2D.Left, Vector2D.Down, Vector2D.Right};
+            var directions = new Vector2D[] { Vector2D.Up, Vector2D.Left, Vector2D.Down, Vector2D.Right };
             var viableDirections = new List<Vector2D>(4);
 
             foreach (var dir in directions)
@@ -101,7 +136,7 @@ namespace PacManGame
         public bool IsValidTile(int tileX, int tileY, Vector2D currentDirection)
         {
             (int newTileX, int newTileY) = (tileX + currentDirection.X, tileY + currentDirection.Y);
-            (newTileX, newTileY) = CheckForTunnelTile(newTileX,newTileY);
+            (newTileX, newTileY) = CheckForTunnelTile(newTileX, newTileY);
             Tile targetTile = board.Grid[newTileY, newTileX];
             return IsTileWalkable(targetTile);
         }
@@ -116,8 +151,8 @@ namespace PacManGame
             return (int)(Math.Abs(TileX - targetTileX) + Math.Abs(TileY - targetTileY));
         }
         public (int X, int Y) GetTargetForMode(ModeType mode)
-    {
-        return modeTargetTiles[mode];
-    }
+        {
+            return modeTargetTiles[mode];
+        }
     }
 }

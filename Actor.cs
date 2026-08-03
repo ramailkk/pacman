@@ -10,19 +10,33 @@ namespace PacManGame
         public static readonly Vector2D Right = new Vector2D(1, 0);
         public static readonly Vector2D Zero = new Vector2D(0, 0);
         public readonly Vector2D Reverse() => new Vector2D(-X, -Y);
-
     }
-    public class Actor{
+    public class Actor
+    {
         public int PixelPosX;
         public int PixelPosY;
         public int speed;
         public Vector2D direction;
         protected Board board;
+
+        public int accumulator;
         public Actor(int TilePosX, int TilePosY, int speed, Board board)
         {
             this.board = board;
-            (this.PixelPosX,this.PixelPosY) = ConvertTileToPixel(TilePosX,TilePosY);
+            (this.PixelPosX, this.PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
             this.speed = speed;
+            accumulator = 0;
+        }
+
+        public bool CanMoveThisTick()
+        {
+            accumulator += speed;
+            if (accumulator >= 100)
+            {
+                accumulator -= 100;
+                return true;
+            }
+            return false;
         }
 
         public bool IsCollisionWithActor(Actor other)
@@ -56,16 +70,18 @@ namespace PacManGame
             int totalTileX = board.Grid.GetLength(1);
             int totalTileY = board.Grid.GetLength(0);
 
-            int wrappedX = ((newTileX %  totalTileX) + totalTileX) % totalTileX;
+            int wrappedX = ((newTileX % totalTileX) + totalTileX) % totalTileX;
             int wrappedY = ((newTileY % totalTileY) + totalTileY) % totalTileY;
 
             return (wrappedX, wrappedY);
         }
 
-        public virtual void ChangeDirection(Vector2D direction){
+        public virtual void ChangeDirection(Vector2D direction)
+        {
             this.direction = direction;
         }
-        protected virtual bool IsTileWalkable(Tile tile){
+        protected virtual bool IsTileWalkable(Tile tile)
+        {
             return tile.IsWalkable();
         }
     }

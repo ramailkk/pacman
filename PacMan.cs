@@ -1,20 +1,24 @@
 namespace PacManGame
 {
-public class PacMan : Actor {
+    public class PacMan : Actor
+    {
         public int LIVES;
         public int MULT;
         public bool SPREE;
         public Vector2D bufferDirection;
-
-        // Secondary constructor
-        public PacMan(int x, int y, int speed, Board board, int lives) : base(x, y, speed, board) {
+    
+        public PacMan(int x, int y, int speed, Board board, int lives) : base(x, y, speed, board)
+        {
             this.LIVES = lives;
             this.MULT = 1;
             this.SPREE = false;
             this.bufferDirection = Vector2D.Zero;
             this.direction = Vector2D.Down;
         }
-        public void Move(){
+        public void Move()
+        {
+            if (!this.CanMoveThisTick())
+                return;
             DecideDirection();
             // Calculate new pixel position based on direction
             int newPixelX = PixelPosX + (direction.X);
@@ -22,8 +26,9 @@ public class PacMan : Actor {
             (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
             (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
-            if (IsValidMove(direction)){
-                (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX,tileY);
+            if (IsValidMove(direction))
+            {
+                (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX, tileY);
                 if (direction.X == 0)
                     PixelPosY = newPixelY;
                 else
@@ -58,7 +63,8 @@ public class PacMan : Actor {
             return IsTileWalkable(targetTile);
         }
 
-        public override void ChangeDirection(Vector2D direction){
+        public override void ChangeDirection(Vector2D direction)
+        {
             this.direction = direction;
         }
 
@@ -66,7 +72,8 @@ public class PacMan : Actor {
         {
             if (bufferDirection.Equals(Vector2D.Zero))
                 return;
-            if (IsValidMove(bufferDirection)){
+            if (IsValidMove(bufferDirection))
+            {
                 ChangeDirection(bufferDirection);
                 ChangeBufferDirection(Vector2D.Zero);
             }
@@ -76,7 +83,8 @@ public class PacMan : Actor {
             this.bufferDirection = bufferDirection;
 
         }
-        protected override bool IsTileWalkable(Tile tile){
+        protected override bool IsTileWalkable(Tile tile)
+        {
             return tile.IsWalkableForPacMan();
         }
         public (int TileX, int TileY) GetPacManTile()
@@ -84,7 +92,9 @@ public class PacMan : Actor {
             return ConvertPixelToTile(PixelPosX, PixelPosY);
         }
 
-        public void CheckConsumables(){
+
+        public void CheckConsumables()
+        {
             (int tileX, int tileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);
             Tile tile = this.board.Grid[tileY, tileX];
 

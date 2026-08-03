@@ -8,10 +8,8 @@ namespace PacManGame
         // Internal simulation tile size (matches Actor's pixel-coordinate math).
         // Don't change this without also re-checking Actor's movement/collision math.
         const int TileSize = 8;
-
         // Purely visual multiplier so an 8px tile isn't a postage stamp on screen.
         const float DrawScale = 3f;
-
         // Mode timing
         const float ModeDuration = 10.0f; // seconds per mode
         static float modeTimer = ModeDuration;
@@ -61,10 +59,10 @@ namespace PacManGame
             Board board1 = new(board, TileSize, TileSize);
 
             // Row 23, col 14 is an open dot tile below the ghost house — safe spawn.
-            PacMan pacman = new PacMan(15, 24, 2, board1, 3);
+            PacMan pacman = new PacMan(15, 24, 100, board1, 3);
 
             // Create one ghost with scatter corner (top-left) and fright tile (center)
-            Ghost blinky = new Ghost(14, 13, 1, board1, 3, 0, 14, 13, pacman);
+            Ghost blinky = new Ghost(14, 13, 80, board1, 3, 0, 14, 13, pacman);
 
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
