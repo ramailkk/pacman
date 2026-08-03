@@ -147,8 +147,17 @@ namespace PacManGame
 
             // Line 2: Current tile coordinates
             (int tileX, int tileY) = pacman.ConvertPixelToTile(pacman.PixelPosX, pacman.PixelPosY);
-            string line2 = $"Tile: ({tileX}, {tileY})";
+            // string line2 = $"Tile: ({tileX}, {tileY})";
             Raylib.DrawText(line2, 10, hudY + 25, 20, Color.LightGray);
+            string dir = pacman.direction.Equals(Vector2D.Zero) ? "None" :
+                        pacman.direction.Equals(Vector2D.Up) ? "Up" :
+                        pacman.direction.Equals(Vector2D.Down) ? "Down" :
+                        pacman.direction.Equals(Vector2D.Left) ? "Left" : "Right";
+            string buf = pacman.bufferDirection.Equals(Vector2D.Zero) ? "None" :
+                        pacman.bufferDirection.Equals(Vector2D.Up) ? "Up" :
+                        pacman.bufferDirection.Equals(Vector2D.Down) ? "Down" :
+                        pacman.bufferDirection.Equals(Vector2D.Left) ? "Left" : "Right";
+            string line2 = $"Tile: ({tileX}, {tileY})  Dir: {dir}  Buffer: {buf}";
         }
     }
 }
