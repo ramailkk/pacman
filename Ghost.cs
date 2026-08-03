@@ -6,7 +6,8 @@ namespace PacManGame
     {
         Chase,
         Scatter,
-        Fright
+        Fright,
+        Dead
     }
 
     public enum SpeedType
@@ -63,7 +64,7 @@ namespace PacManGame
                 int nextTileX = TileX + direction.X;
                 int nextTileY = TileY + direction.Y;
                 (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX, nextTileY);
-                if (CurrentMode.Equals(ModeType.Fright))
+                if (!CurrentMode.Equals(ModeType.Fright))
                     pendingDirection = LookAhead(nextTileX, nextTileY);
                 else
                     pendingDirection = FrightLook(nextTileX, nextTileY);
@@ -80,10 +81,12 @@ namespace PacManGame
             // if not found at random first then go clockwise
             var directions = new Vector2D[] { Vector2D.Up, Vector2D.Right, Vector2D.Down, Vector2D.Left};
             var randomDirection = directions[Random.Shared.Next(directions.Length)];
-            if (!IsValidTile(tileX, tileY, randomDirection))
+            if (!IsValidTile(tileX, tileY, randomDirection) || randomDirection.Equals(direction.Reverse()))
             {
                 foreach (var dir in directions)
                 {
+                    if (dir.Equals(direction.Reverse()))
+                        continue;
                     if (IsValidTile(tileX, tileY, dir))
                         return dir;
                 }
