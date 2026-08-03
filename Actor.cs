@@ -16,10 +16,10 @@ namespace PacManGame
         public int speed;
         public Vector2D direction;
         protected Board board;
-        public Actor(int TilePosX, int TilePosY, int speed, Board board){
-            this.PixelPosX = ConvertTileCordinatesToPixel(TilePosX, board.TileWidth);
-            this.PixelPosY = ConvertTileCordinatesToPixel(TilePosY, board.TileHeight);
+        public Actor(int TilePosX, int TilePosY, int speed, Board board)
+        {
             this.board = board;
+            (this.PixelPosX,this.PixelPosY) = ConvertTileToPixel(TilePosX,TilePosY);
             this.speed = speed;
         }
 
@@ -31,56 +31,59 @@ namespace PacManGame
             // Calculate new pixel position based on direction
             int newPixelX = PixelPosX + (direction.X);
             int newPixelY = PixelPosY + (direction.Y);
+            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
 
-            // Convert to tile coordinates
-            int tileX = ConvertPixelCordinatesToTile(newPixelX, board.TileWidth);
-            int tileY = ConvertPixelCordinatesToTile(newPixelY, board.TileHeight);
-            // Check also Actor outline collisions
+            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
-            int outlineTileX = ConvertPixelCordinatesToTile(newPixelX-1 + (board.TileWidth / 2 * direction.X), board.TileWidth);
-            int outlineTileY = ConvertPixelCordinatesToTile(newPixelY-1 + (board.TileHeight / 2 * direction.Y), board.TileHeight);
+            int outlinePixelX = newPixelX + (board.TileWidth / 2 * direction.X);
+            int outlinePixelY = newPixelY + (board.TileHeight / 2 * direction.Y);
 
+            // Wrap outline pixels too (important if offset pushes beyond edges)
+            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
+            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
             Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
+
             if (!IsTileWalkable(outlineTile))
-            {
                 return;
-            }
 
             Tile targetTile = board.Grid[tileY, tileX];
 
-
             if (IsTileWalkable(targetTile))
             {
+               (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX,tileY);
                 if (direction.X == 0)
-                {
-                    PixelPosX = ConvertTileCordinatesToPixel(tileX,board.TileWidth);
                     PixelPosY = newPixelY;
-                }
                 else
-                {
                     PixelPosX = newPixelX;
-                    PixelPosY = ConvertTileCordinatesToPixel(tileY,board.TileHeight);
-                }
             }
         }
 
 
         public bool IsCollisionWithActor(Actor other)
         {
-            int myTileX = ConvertPixelCordinatesToTile(this.PixelPosX, board.TileWidth);
-            int myTileY = ConvertPixelCordinatesToTile(this.PixelPosY, board.TileHeight);
-            int otherTileX = ConvertPixelCordinatesToTile(other.PixelPosX, board.TileWidth);
-            int otherTileY = ConvertPixelCordinatesToTile(other.PixelPosY, board.TileHeight);
-
+            (int myTileX, int myTileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);
+            (int otherTileX, int otherTileY) = ConvertPixelToTile(other.PixelPosX, other.PixelPosY);
             return (myTileX == otherTileX) && (myTileY == otherTileY);
         }
-
-        public int ConvertPixelCordinatesToTile(int PixelPos, int Dim){
-            return PixelPos / Dim;
+        public (int tileX, int tileY) ConvertPixelToTile(int pixelX, int pixelY)
+        {
+            return (pixelX / board.TileWidth, pixelY / board.TileHeight);
+        }
+        public (int pixelX, int pixelY) ConvertTileToPixel(int tileX, int tileY)
+        {
+            return ((tileX * board.TileWidth) + (board.TileWidth / 2),
+                    (tileY * board.TileHeight) + (board.TileHeight / 2));
         }
 
-        public int ConvertTileCordinatesToPixel(int TilePos, int Dim){
-            return (TilePos * Dim) + (Dim/2);
+        public (int pixelX, int pixelY) CheckForTunnel(int newPixelX, int newPixelY)
+        {
+            int totalPixelX = board.TileWidth * board.Grid.GetLength(1);
+            int totalPixelY = board.TileHeight * board.Grid.GetLength(0);
+
+            int wrappedX = ((newPixelX % totalPixelX) + totalPixelX) % totalPixelX;
+            int wrappedY = ((newPixelY % totalPixelY) + totalPixelY) % totalPixelY;
+
+            return (wrappedX, wrappedY);
         }
         public virtual void ChangeDirection(Vector2D direction){
             this.direction = direction;

@@ -14,28 +14,20 @@ public class PacMan : Actor {
             this.bufferDirection = Vector2D.Zero;
             this.direction = Vector2D.Down;
         }
-        protected override bool IsTileWalkable(Tile tile){
-            return tile.IsWalkableForPacMan();
-        }
-
         public override void Move(){
             DecideDirection();
             // Calculate new pixel position based on direction
             int newPixelX = PixelPosX + (direction.X);
             int newPixelY = PixelPosY + (direction.Y);
-            // Convert to tile coordinates
-            int tileX = ConvertPixelCordinatesToTile(newPixelX, board.TileWidth);
-            int tileY = ConvertPixelCordinatesToTile(newPixelY, board.TileHeight);
+            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
+            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
             if (IsValidMove(direction)){
-                if (direction.X == 0){
-                    PixelPosX = ConvertTileCordinatesToPixel(tileX,board.TileWidth);
+                (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX,tileY);
+                if (direction.X == 0)
                     PixelPosY = newPixelY;
-                }
-                else{
+                else
                     PixelPosX = newPixelX;
-                    PixelPosY = ConvertTileCordinatesToPixel(tileY,board.TileHeight);
-                }
                 CheckConsumables();
             }
         }
@@ -43,16 +35,20 @@ public class PacMan : Actor {
         {
             if (currentDirection.Equals(Vector2D.Zero))
                 return false;
+
             int newPixelX = PixelPosX + (currentDirection.X);
             int newPixelY = PixelPosY + (currentDirection.Y);
+            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
 
-            // Convert to tile coordinates
-            int tileX = ConvertPixelCordinatesToTile(newPixelX, board.TileWidth);
-            int tileY = ConvertPixelCordinatesToTile(newPixelY, board.TileHeight);
+            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
-            // Check also Actor outline collisions
-            int outlineTileX = ConvertPixelCordinatesToTile(newPixelX + (board.TileWidth / 2 * currentDirection.X), board.TileWidth);
-            int outlineTileY = ConvertPixelCordinatesToTile(newPixelY + (board.TileHeight / 2 * currentDirection.Y), board.TileHeight);
+            int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
+            int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
+
+            // Wrap outline pixels too (important if offset pushes beyond edges)
+            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
+            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
+
             Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
 
             if (!IsTileWalkable(outlineTile))
@@ -65,11 +61,11 @@ public class PacMan : Actor {
         public override void ChangeDirection(Vector2D direction){
             this.direction = direction;
         }
+
         public void DecideDirection()
         {
-            if (bufferDirection.Equals(Vector2D.Zero)){
+            if (bufferDirection.Equals(Vector2D.Zero))
                 return;
-            }
             if (IsValidMove(bufferDirection)){
                 ChangeDirection(bufferDirection);
                 ChangeBufferDirection(Vector2D.Zero);
@@ -80,15 +76,21 @@ public class PacMan : Actor {
             this.bufferDirection = bufferDirection;
 
         }
+        protected override bool IsTileWalkable(Tile tile){
+            return tile.IsWalkableForPacMan();
+        }
+
         public void CheckConsumables(){
-            int tileX = ConvertPixelCordinatesToTile(this.PixelPosX, board.TileWidth);
-            int tileY = ConvertPixelCordinatesToTile(this.PixelPosY, board.TileHeight);
+            (int tileX, int tileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);
             Tile tile = this.board.Grid[tileY, tileX];
-            if (tile.HasPowerPellet()){
+
+            if (tile.HasPowerPellet())
+            {
                 tile.RemoveDotOrPellet();
                 board.UpdatePowerScore();
             }
-            else if (tile.HasDot()){
+            else if (tile.HasDot())
+            {
                 tile.RemoveDotOrPellet();
                 board.UpdateDotScore();
             }

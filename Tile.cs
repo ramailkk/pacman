@@ -6,7 +6,8 @@ namespace PacManGame{
         PowerPellet = 3,
         Fruit = 4,
         GhostHouse = 5,
-        DeadSpace = 6
+        DeadSpace = 6,
+        Tunnel = 7
     }
     public class Tile{
         public int TileHeight { get; set; }
@@ -37,6 +38,7 @@ namespace PacManGame{
         public void RemoveDotOrPellet(){
             this.Type = TileType.Empty;
         }
+        
 
     }
 }

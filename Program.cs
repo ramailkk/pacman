@@ -26,17 +26,17 @@ namespace PacManGame
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
                 new int[] { 1, 2, 2, 2, 2, 2, 2, 1, 1, 4, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 1 },
-                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 5, 1, 1, 5, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
-                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 1, 1, 1, 5, 1, 1, 5, 1, 1, 1, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
-                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
-                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 5, 1, 1, 1, 5, 5, 1, 1, 1, 5, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
-                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 5, 1, 5, 5, 5, 5, 5, 5, 1, 5, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
-                new int[] { 6, 6, 6, 6, 6, 6, 2, 6, 6, 5, 1, 5, 5, 5, 5, 5, 5, 1, 5, 6, 6, 2, 6, 6, 6, 6, 6, 6 },
-                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 5, 1, 5, 5, 5, 5, 5, 5, 1, 5, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
-                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
-                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
-                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
-                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
+                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
+                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
+                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
+                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 0, 1, 1, 1, 5, 5, 1, 1, 1, 0, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
+                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 5, 5, 5, 5, 5, 5, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
+                new int[] { 7, 7, 7, 7, 7, 7, 2, 0, 0, 0, 1, 5, 5, 5, 5, 5, 5, 1, 0, 2, 2, 7, 7, 7, 7, 7, 7, 7 },
+                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 5, 5, 5, 5, 5, 5, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
+                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
+                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
+                new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
+                new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
                 new int[] { 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1 },
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
@@ -53,10 +53,10 @@ namespace PacManGame
             Board board1 = new(board, TileSize, TileSize);
 
             // Row 23, col 14 is an open dot tile below the ghost house — safe spawn.
-            PacMan pacman = new PacMan(15, 23, 2, board1, 3);
+            PacMan pacman = new PacMan(13, 24, 2, board1, 3);
 
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
-            int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 40; // room for HUD
+            int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 70; // room for two HUD lines
 
             Raylib.InitWindow(screenWidth, screenHeight, "PacMan - Raylib Test Harness");
             Raylib.SetTargetFPS(60);
@@ -140,8 +140,15 @@ namespace PacManGame
         static void DrawHud(Board board, PacMan pacman)
         {
             int hudY = board.Grid.GetLength(0) * TileSize * (int)DrawScale + 5;
-            string text = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.DotCounter}";
-            Raylib.DrawText(text, 10, hudY, 20, Color.White);
+
+            // Line 1: Score, Lives, Dots left
+            string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.DotCounter}";
+            Raylib.DrawText(line1, 10, hudY, 20, Color.White);
+
+            // Line 2: Current tile coordinates
+            (int tileX, int tileY) = pacman.ConvertPixelToTile(pacman.PixelPosX, pacman.PixelPosY);
+            string line2 = $"Tile: ({tileX}, {tileY})";
+            Raylib.DrawText(line2, 10, hudY + 25, 20, Color.LightGray);
         }
     }
 }
