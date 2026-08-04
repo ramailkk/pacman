@@ -9,18 +9,10 @@ namespace PacManGame
         Fright,
         Dead
     }
-
-    public enum SpeedType
-    {
-        Normal,
-        Fright,
-        Tunnel,
-    }
     // up, left, down, right preference for tiles if all are same distance away from targetTile. 
     public class Ghost : Actor
     {
         private Dictionary<ModeType, (int X, int Y)> modeTargetTiles;
-        private Dictionary<SpeedType, int> speedTypePercentage;
         public ModeType CurrentMode;
         public PacMan PacMan;
         private Vector2D pendingDirection = Vector2D.Zero;
@@ -35,12 +27,7 @@ namespace PacManGame
                 { ModeType.Scatter, (ScatterTileX, ScatterTileY) },
                 { ModeType.Chase, pacMan.GetPacManTile() },
                 { ModeType.Fright, (FrightTileX, FrightTileY) },
-            };
-            speedTypePercentage = new Dictionary<SpeedType, int>
-            {
-                 { SpeedType.Normal, 80},
-                 { SpeedType.Fright, 50},
-                 { SpeedType.Tunnel, 40},
+                { ModeType.Dead, (FrightTileX, FrightTileY) }
             };
 
             direction = Vector2D.Left;
@@ -65,9 +52,9 @@ namespace PacManGame
                 int nextTileY = TileY + direction.Y;
                 (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX, nextTileY);
                 if (!CurrentMode.Equals(ModeType.Fright))
-                    pendingDirection = LookAhead(nextTileX, nextTileY);
+                    pendingDirection = NormalLookAhead(nextTileX, nextTileY);
                 else
-                    pendingDirection = FrightLook(nextTileX, nextTileY);
+                    pendingDirection = FrightLookAhead(nextTileX, nextTileY);
                 pendingTileX = nextTileX;
                 pendingTileY = nextTileY;
             }
@@ -76,7 +63,7 @@ namespace PacManGame
                 (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
         }
 
-        public Vector2D FrightLook(int tileX, int tileY)
+        public Vector2D FrightLookAhead(int tileX, int tileY)
         {
             // if not found at random first then go clockwise
             var directions = new Vector2D[] { Vector2D.Up, Vector2D.Right, Vector2D.Down, Vector2D.Left};
@@ -93,7 +80,7 @@ namespace PacManGame
             }
             return randomDirection;
         }
-        public Vector2D LookAhead(int tileX, int tileY)
+        public Vector2D NormalLookAhead(int tileX, int tileY)
         {
             // up, left, down, right -> is the order we need in intersectio
             var directions = new Vector2D[] { Vector2D.Up, Vector2D.Left, Vector2D.Down, Vector2D.Right };
@@ -114,7 +101,6 @@ namespace PacManGame
             // only possible direction so return just 1
             if (viableDirections.Count == 0)
                 return Vector2D.Zero;
-
             else
                 return viableDirections[0];
         }
@@ -127,7 +113,7 @@ namespace PacManGame
             (int targetTileX, int targetTileY) = modeTargetTiles[CurrentMode];
             foreach (var dir in viableDirections)
             {
-                int dist = ManhattanDistanceBetweenTiles(tileX + dir.X, tileY + dir.Y, targetTileX, targetTileY);
+                int dist = EuclideanDistanceBetweenTiles(tileX + dir.X, tileY + dir.Y, targetTileX, targetTileY);
                 if (dist < low)
                 {
                     low = dist;
@@ -146,6 +132,14 @@ namespace PacManGame
 
         public void UpdateMode(ModeType mode)
         {
+            if (mode.Equals(ModeType.Fright))
+            {
+                // Apply Fright timer starting logic here
+            }
+            else if (mode.Equals(ModeType.Dead))
+            {
+                // Apply being dead logic here
+            }
             CurrentMode = mode;
         }
 
@@ -153,6 +147,13 @@ namespace PacManGame
         {
             return (int)(Math.Abs(TileX - targetTileX) + Math.Abs(TileY - targetTileY));
         }
+        public static int EuclideanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
+        {
+            int dx = TileX - targetTileX;
+            int dy = TileY - targetTileY;
+            return (int)Math.Sqrt(dx * dx + dy * dy);
+        }
+
         public (int X, int Y) GetTargetForMode(ModeType mode)
         {
             return modeTargetTiles[mode];

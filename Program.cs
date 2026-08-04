@@ -57,13 +57,13 @@ namespace PacManGame
                 new int[] { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 }
             ];
             Board board1 = new(board, TileSize, TileSize);
-
+            List<Ghost> ghosts;
             // Row 23, col 14 is an open dot tile below the ghost house — safe spawn.
             PacMan pacman = new PacMan(15, 24, 100, board1, 3);
-
             // Create one ghost with scatter corner (top-left) and fright tile (center)
             Ghost blinky = new Ghost(14, 13, 80, board1, 3, 0, 14, 13, pacman);
-
+            ghosts = [blinky];
+            pacman.ghosts = ghosts;
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
 
@@ -82,14 +82,14 @@ namespace PacManGame
                 }
 
                 HandleInput(pacman);
-                pacman.Move();
+                pacman.UpdateLoop();
                 blinky.Move();
 
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
                 DrawBoard(board1);
-                DrawManhattanPath(blinky);  // Draw Manhattan path visualization
+                DrawEuclideanPath(blinky);  // Draw Manhattan path visualization
                 DrawScatterTarget(blinky);
                 DrawPacMan(pacman);
                 DrawGhost(blinky);
@@ -151,6 +151,116 @@ namespace PacManGame
             }
         }
 
+        static void DrawEuclideanPath(Ghost ghost)
+{
+    // Get ghost's current tile position
+    (int ghostTileX, int ghostTileY) = ghost.ConvertPixelToTile(ghost.PixelPosX, ghost.PixelPosY);
+
+    // Get target tile for current mode
+    (int targetX, int targetY) = ghost.GetTargetForMode(ghost.CurrentMode);
+
+    // Calculate Euclidean distance
+    double distance = Math.Sqrt(Math.Pow(targetX - ghostTileX, 2) + Math.Pow(targetY - ghostTileY, 2));
+
+    // Convert to screen coordinates (center of tiles)
+    float startScreenX = ghostTileX * TileSize * DrawScale + (TileSize * DrawScale / 2);
+    float startScreenY = ghostTileY * TileSize * DrawScale + (TileSize * DrawScale / 2);
+    float endScreenX = targetX * TileSize * DrawScale + (TileSize * DrawScale / 2);
+    float endScreenY = targetY * TileSize * DrawScale + (TileSize * DrawScale / 2);
+
+    // Draw the straight Euclidean path in cyan
+    Color pathColor = new Color(0, 255, 255, 150); // Cyan with transparency
+    Raylib.DrawLine(
+        (int)startScreenX, (int)startScreenY,
+        (int)endScreenX, (int)endScreenY,
+        pathColor
+    );
+
+    // Draw small dots along the path
+    int numPoints = 10;
+    for (int i = 0; i <= numPoints; i++)
+    {
+        float t = i / (float)numPoints;
+        float x = startScreenX + (endScreenX - startScreenX) * t;
+        float y = startScreenY + (endScreenY - startScreenY) * t;
+        Raylib.DrawCircle((int)x, (int)y, TileSize * DrawScale * 0.06f, pathColor);
+    }
+
+    // Draw the viable directions from the ghost's current position
+    var directions = new Vector2D[] { Vector2D.Up, Vector2D.Left, Vector2D.Down, Vector2D.Right };
+    foreach (var dir in directions)
+    {
+        // Check if this direction is viable
+        if (ghost.IsValidTile(ghostTileX, ghostTileY, dir))
+        {
+            int nextX = ghostTileX + dir.X;
+            int nextY = ghostTileY + dir.Y;
+
+            float dirStartX = ghostTileX * TileSize * DrawScale + (TileSize * DrawScale / 2);
+            float dirStartY = ghostTileY * TileSize * DrawScale + (TileSize * DrawScale / 2);
+            float dirEndX = nextX * TileSize * DrawScale + (TileSize * DrawScale / 2);
+            float dirEndY = nextY * TileSize * DrawScale + (TileSize * DrawScale / 2);
+
+            // Draw viable direction in green
+            Color viableColor = new Color(0, 255, 0, 150);
+            Raylib.DrawLine((int)dirStartX, (int)dirStartY, (int)dirEndX, (int)dirEndY, viableColor);
+
+            // Draw a small green arrow head
+            float arrowSize = TileSize * DrawScale * 0.15f;
+            float angle = (float)Math.Atan2(dir.Y, dir.X);
+            float arrowX = dirEndX - arrowSize * (float)Math.Cos(angle);
+            float arrowY = dirEndY - arrowSize * (float)Math.Sin(angle);
+
+            // Draw arrow tip
+            Raylib.DrawCircle((int)dirEndX, (int)dirEndY, TileSize * DrawScale * 0.08f, viableColor);
+        }
+    }
+
+    // Draw the selected direction (ghost's current direction) in bold red
+    if (!ghost.direction.Equals(Vector2D.Zero))
+    {
+        int nextX = ghostTileX + ghost.direction.X;
+        int nextY = ghostTileY + ghost.direction.Y;
+
+        float dirStartX = ghostTileX * TileSize * DrawScale + (TileSize * DrawScale / 2);
+        float dirStartY = ghostTileY * TileSize * DrawScale + (TileSize * DrawScale / 2);
+        float dirEndX = nextX * TileSize * DrawScale + (TileSize * DrawScale / 2);
+        float dirEndY = nextY * TileSize * DrawScale + (TileSize * DrawScale / 2);
+
+        // Draw selected direction in bold red
+        Raylib.DrawLine((int)dirStartX, (int)dirStartY, (int)dirEndX, (int)dirEndY, Color.Red);
+        Raylib.DrawCircle((int)dirEndX, (int)dirEndY, TileSize * DrawScale * 0.12f, Color.Red);
+    }
+
+    // Draw a small label showing Euclidean distance
+    float labelX = ghost.PixelPosX * DrawScale + 10;
+    float labelY = ghost.PixelPosY * DrawScale - 20;
+    string distText = $"Euclidean Dist: {distance:F1}";
+    Raylib.DrawText(distText, (int)labelX, (int)labelY, 15, Color.DarkGray);
+
+    // Draw target marker (scatter target) in cyan
+    (int scatterX, int scatterY) = ghost.ScatterTarget;
+    float screenX = scatterX * TileSize * DrawScale + (TileSize * DrawScale / 2);
+    float screenY = scatterY * TileSize * DrawScale + (TileSize * DrawScale / 2);
+    float radius = TileSize * DrawScale * 0.3f;
+
+    // Draw a semi-transparent circle
+    Color markerColor = new Color(0, 255, 255, 128);
+    Raylib.DrawCircle((int)screenX, (int)screenY, radius, markerColor);
+
+    // Draw a small "X" marker
+    float crossSize = TileSize * DrawScale * 0.2f;
+    Raylib.DrawLine(
+        (int)(screenX - crossSize), (int)(screenY - crossSize),
+        (int)(screenX + crossSize), (int)(screenY + crossSize),
+        new Color(0, 255, 255, 200)
+    );
+    Raylib.DrawLine(
+        (int)(screenX - crossSize), (int)(screenY + crossSize),
+        (int)(screenX + crossSize), (int)(screenY - crossSize),
+        new Color(0, 255, 255, 200)
+    );
+}
         static void DrawManhattanPath(Ghost ghost)
         {
             // Get ghost's current tile position

@@ -1,12 +1,19 @@
 namespace PacManGame
 {
+
+    public enum State
+    {
+        Normal,
+        Power,
+        Dead,
+    }
     public class PacMan : Actor
     {
         public int LIVES;
         public int MULT;
         public bool SPREE;
         public Vector2D bufferDirection;
-    
+        public List<Ghost> ghosts;
         public PacMan(int x, int y, int speed, Board board, int lives) : base(x, y, speed, board)
         {
             this.LIVES = lives;
@@ -14,6 +21,13 @@ namespace PacManGame
             this.SPREE = false;
             this.bufferDirection = Vector2D.Zero;
             this.direction = Vector2D.Down;
+        }
+
+        public void UpdateLoop()
+        {
+            Move();
+            CheckConsumables();
+            CheckGhostCollisions();
         }
         public void Move()
         {
@@ -33,7 +47,6 @@ namespace PacManGame
                     PixelPosY = newPixelY;
                 else
                     PixelPosX = newPixelX;
-                CheckConsumables();
             }
         }
         public bool IsValidMove(Vector2D currentDirection)
@@ -92,15 +105,38 @@ namespace PacManGame
             return ConvertPixelToTile(PixelPosX, PixelPosY);
         }
 
-
+        public void SetGhosts(List<Ghost> ghosts)
+        {
+            this.ghosts = ghosts;
+        }
+        public void CheckGhostCollisions()
+        {
+            foreach (var ghost in ghosts)
+            {
+                if (this.IsCollisionWithActor(ghost))
+                {
+                    if (ghost.CurrentMode.Equals(ModeType.Fright)){
+                        ghost.UpdateMode(ModeType.Dead);
+                        board.Score = 200 * MULT;
+                        MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
+                    }
+                    else if (!ghost.CurrentMode.Equals(ModeType.Dead))
+                    {
+                        LIVES--;
+                        // Apply some logic about restarting the game
+                    }
+                }
+            }
+        }
         public void CheckConsumables()
         {
             (int tileX, int tileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);
             Tile tile = this.board.Grid[tileY, tileX];
 
-            if (tile.HasPowerPellet())
-            {
+            if (tile.HasPowerPellet()){
                 tile.RemoveDotOrPellet();
+                foreach (var ghost in ghosts)
+                    ghost.UpdateMode(ModeType.Fright);
                 board.UpdatePowerScore();
             }
             else if (tile.HasDot())
