@@ -52,5 +52,9 @@ namespace PacManGame
         {
             return this.Type.Equals(TileType.RedZone);
         }
+        public bool IsTunnel()
+        {
+            return this.Type.Equals(TileType.Tunnel);
+        }
     }
 }

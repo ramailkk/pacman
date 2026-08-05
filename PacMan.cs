@@ -15,6 +15,8 @@ namespace PacManGame
         public Vector2D bufferDirection;
         public List<Ghost> ghosts;
         public LevelTimer timer;
+        public int FreezeFramesRemaining;
+
         public PacMan(int x, int y, int speed, Board board, int lives) : base(x, y, speed, board)
         {
             this.LIVES = lives;
@@ -22,6 +24,7 @@ namespace PacManGame
             this.SPREE = false;
             this.bufferDirection = Vector2D.Zero;
             this.direction = Vector2D.Down;
+            FreezeFramesRemaining = 0;
         }
 
         public void UpdateLoop()
@@ -34,6 +37,12 @@ namespace PacManGame
         {
             if (!this.CanMoveThisTick())
                 return;
+            CheckSpeed();
+            if (FreezeFramesRemaining > 0)
+            {
+                FreezeFramesRemaining--;
+                return;
+            }
             DecideDirection();
             // Calculate new pixel position based on direction
             int newPixelX = PixelPosX + (direction.X);
@@ -134,6 +143,16 @@ namespace PacManGame
                 }
             }
         }
+
+
+        public void CheckSpeed()
+        {
+            int Level = board.LEVEL;
+            if (timer.isFrightMode())
+                speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightPacManSpeed);
+            else
+                speed = LevelSpecs.GetEntry(Level, LevelSpecs.PacManSpeed);
+        }
         public void CheckConsumables()
         {
             (int tileX, int tileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);
@@ -142,7 +161,7 @@ namespace PacManGame
             if (tile.HasPowerPellet())
             {
                 tile.RemoveDotOrPellet();
-                // begin timer for Fright
+                FreezeFramesRemaining = 3;
                 timer.InitiateFrightTimer();
                 foreach (var ghost in ghosts)
                     ghost.UpdateMode(ModeType.Fright);
@@ -151,6 +170,7 @@ namespace PacManGame
             else if (tile.HasDot())
             {
                 tile.RemoveDotOrPellet();
+                FreezeFramesRemaining = 1;
                 board.UpdateDotScore();
             }
         }

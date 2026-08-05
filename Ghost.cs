@@ -1,5 +1,5 @@
 using System.Collections;
-
+using PacManGame;
 namespace PacManGame
 {
     public enum ModeType
@@ -34,13 +34,14 @@ namespace PacManGame
             direction = Vector2D.Left;
             CurrentMode = ModeType.Scatter;
         }
-
         public void Move()
         {
+             (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+            // check Speed first
+            CheckSpeedForGhost(TileX,TileY);
             if (!this.CanMoveThisTick())
                 return;
             modeTargetTiles[ModeType.Chase] = PacMan.GetPacManTile();
-            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
 
             if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
             {
@@ -64,6 +65,19 @@ namespace PacManGame
                 (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
         }
 
+        public void CheckSpeedForGhost(int tileX, int tileY)
+        {
+            int Level = board.LEVEL;
+            Tile currentTile = board.Grid[tileY, tileX];
+            if (currentTile.IsTunnel())
+                speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostTunnelSpeed);
+            else if (CurrentMode.Equals(ModeType.Fright))
+                speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightGhostSpeed);
+            else if (CurrentMode.Equals(ModeType.Chase) || CurrentMode.Equals(ModeType.Scatter))
+                speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostSpeed);
+            else if (CurrentMode.Equals(ModeType.Dead))
+                speed = 90;
+        }
         public Vector2D FrightLookAhead(int tileX, int tileY)
         {
             // if not found at random first then go clockwise
