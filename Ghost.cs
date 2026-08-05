@@ -31,7 +31,7 @@ namespace PacManGame
             };
 
             direction = Vector2D.Left;
-            CurrentMode = ModeType.Chase;
+            CurrentMode = ModeType.Scatter;
         }
 
         public void Move()
@@ -66,7 +66,7 @@ namespace PacManGame
         public Vector2D FrightLookAhead(int tileX, int tileY)
         {
             // if not found at random first then go clockwise
-            var directions = new Vector2D[] { Vector2D.Up, Vector2D.Right, Vector2D.Down, Vector2D.Left};
+            var directions = new Vector2D[] { Vector2D.Up, Vector2D.Right, Vector2D.Down, Vector2D.Left };
             var randomDirection = directions[Random.Shared.Next(directions.Length)];
             if (!IsValidTile(tileX, tileY, randomDirection) || randomDirection.Equals(direction.Reverse()))
             {

@@ -14,6 +14,7 @@ namespace PacManGame
         public bool SPREE;
         public Vector2D bufferDirection;
         public List<Ghost> ghosts;
+        public LevelTimer timer;
         public PacMan(int x, int y, int speed, Board board, int lives) : base(x, y, speed, board)
         {
             this.LIVES = lives;
@@ -109,6 +110,10 @@ namespace PacManGame
         {
             this.ghosts = ghosts;
         }
+        public void SetTimer(LevelTimer timer)
+        {
+            this.timer = timer;
+        }
         public void CheckGhostCollisions()
         {
             foreach (var ghost in ghosts)
@@ -135,6 +140,8 @@ namespace PacManGame
 
             if (tile.HasPowerPellet()){
                 tile.RemoveDotOrPellet();
+                // begin timer for Fright
+                timer.InitiateFrightTimer();
                 foreach (var ghost in ghosts)
                     ghost.UpdateMode(ModeType.Fright);
                 board.UpdatePowerScore();
