@@ -9,7 +9,8 @@ namespace PacManGame
         Fruit = 4,
         GhostHouse = 5,
         DeadSpace = 6,
-        Tunnel = 7
+        Tunnel = 7,
+        RedZone = 8
     }
     public class Tile
     {
@@ -47,7 +48,9 @@ namespace PacManGame
         {
             this.Type = TileType.Empty;
         }
-
-
+        public bool IsRedZone()
+        {
+            return this.Type.Equals(TileType.RedZone);
+        }
     }
 }

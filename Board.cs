@@ -13,7 +13,8 @@ namespace PacManGame
             { 4, TileType.Fruit },
             { 5, TileType.GhostHouse },
             { 6, TileType.DeadSpace },
-            { 7, TileType.Tunnel}
+            { 7, TileType.Tunnel},
+            { 8, TileType.RedZone}
         };
 
         public int TileHeight { get; }

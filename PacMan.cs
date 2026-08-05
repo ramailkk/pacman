@@ -120,7 +120,8 @@ namespace PacManGame
             {
                 if (this.IsCollisionWithActor(ghost))
                 {
-                    if (ghost.CurrentMode.Equals(ModeType.Fright)){
+                    if (ghost.CurrentMode.Equals(ModeType.Fright))
+                    {
                         ghost.UpdateMode(ModeType.Dead);
                         board.Score = 200 * MULT;
                         MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
@@ -138,7 +139,8 @@ namespace PacManGame
             (int tileX, int tileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);
             Tile tile = this.board.Grid[tileY, tileX];
 
-            if (tile.HasPowerPellet()){
+            if (tile.HasPowerPellet())
+            {
                 tile.RemoveDotOrPellet();
                 // begin timer for Fright
                 timer.InitiateFrightTimer();

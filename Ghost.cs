@@ -14,6 +14,7 @@ namespace PacManGame
     {
         private Dictionary<ModeType, (int X, int Y)> modeTargetTiles;
         public ModeType CurrentMode;
+        public bool canReverse;
         public PacMan PacMan;
         private Vector2D pendingDirection = Vector2D.Zero;
         private int pendingTileX, pendingTileY;
@@ -72,6 +73,11 @@ namespace PacManGame
             {
                 foreach (var dir in directions)
                 {
+                    if (canReverse)
+                    {
+                        canReverse = false;
+                        return direction.Reverse();
+                    }
                     if (dir.Equals(direction.Reverse()))
                         continue;
                     if (IsValidTile(tileX, tileY, dir))
@@ -88,10 +94,18 @@ namespace PacManGame
 
             foreach (var dir in directions)
             {
+                if (canReverse){
+                        canReverse = false;
+                        return direction.Reverse();
+                    }
                 // No going back
                 if (dir.Equals(direction.Reverse()))
                     continue;
 
+                // REDZONE CANT GO UP IN THESE TILES
+                if (board.Grid[tileY,tileX].IsRedZone() && dir.Equals(Vector2D.Up))
+                    continue;
+                
                 if (IsValidTile(tileX, tileY, dir))
                     viableDirections.Add(dir);
             }
@@ -140,6 +154,11 @@ namespace PacManGame
             {
                 // Apply being dead logic here
             }
+            // Reversal logic
+            if (CurrentMode.Equals(ModeType.Chase) && (mode.Equals(ModeType.Scatter) || mode.Equals(ModeType.Fright)))
+                canReverse = true;
+            if (CurrentMode.Equals(ModeType.Scatter) && mode.Equals(ModeType.Chase))
+                canReverse = true;
             CurrentMode = mode;
         }
 
