@@ -40,10 +40,11 @@ namespace PacManGame
         {
             if (!this.CanMoveThisTick())
                 return;
-            if (FreezeFramesRemaining > 0) { 
+            if (FreezeFramesRemaining > 0)
+            {
                 FreezeFramesRemaining--;
-                    return; 
-            }    
+                return;
+            }
             DecideDirection();
             // Calculate new pixel position based on direction
             int newPixelX = PixelPosX + (direction.X);
@@ -51,7 +52,7 @@ namespace PacManGame
             (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
             (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
-            if (IsValidMove(direction))
+            if (base.IsValidMove(direction))
             {
                 (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX, tileY);
                 if (direction.X == 0)
@@ -63,37 +64,6 @@ namespace PacManGame
         public void CheckFreezeFrames()
         {
             if (FreezeFramesRemaining > 0) FreezeFramesRemaining--;
-        }
-        public bool IsValidMove(Vector2D currentDirection)
-        {
-            if (currentDirection.Equals(Vector2D.Zero))
-                return false;
-
-            int newPixelX = PixelPosX + (currentDirection.X);
-            int newPixelY = PixelPosY + (currentDirection.Y);
-            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
-
-            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
-
-            int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
-            int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
-
-            // Wrap outline pixels too (important if offset pushes beyond edges)
-            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
-            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
-
-            Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
-
-            if (!IsTileWalkable(outlineTile))
-                return false;
-
-            Tile targetTile = board.Grid[tileY, tileX];
-            return IsTileWalkable(targetTile);
-        }
-
-        public override void ChangeDirection(Vector2D direction)
-        {
-            this.direction = direction;
         }
 
         public void DecideDirection()
@@ -109,7 +79,6 @@ namespace PacManGame
         public void ChangeBufferDirection(Vector2D bufferDirection)
         {
             this.bufferDirection = bufferDirection;
-
         }
         protected override bool IsTileWalkable(Tile tile)
         {

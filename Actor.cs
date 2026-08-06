@@ -26,14 +26,14 @@ namespace PacManGame
         public Actor(int tilePosX, int tilePosY, Board board)
         {
             this.board = board;
-            (TilePosX, TilePosY) = (tilePosX,tilePosY);
+            (TilePosX, TilePosY) = (tilePosX, tilePosY);
             accumulator = 0;
         }
 
         public virtual void Initialize()
         {
             (PixelPosX, PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
-            PixelPosX = PixelPosX + board.TileWidth/2;
+            PixelPosX = PixelPosX + board.TileWidth / 2;
         }
 
         public bool CanMoveThisTick()
@@ -83,7 +83,39 @@ namespace PacManGame
 
             return (wrappedX, wrappedY);
         }
+        public bool IsValidMove(Vector2D currentDirection)
+        {
+            if (currentDirection.Equals(Vector2D.Zero))
+                return false;
 
+            int newPixelX = PixelPosX + currentDirection.X;
+            int newPixelY = PixelPosY + currentDirection.Y;
+            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
+            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
+            int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
+            int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
+            // Wrap outline pixels too (important if offset pushes beyond edges)
+            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
+            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
+            Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
+            if (!IsTileWalkable(outlineTile))
+                return false;
+            Tile targetTile = board.Grid[tileY, tileX];
+            return IsTileWalkable(targetTile);
+        }
+        public bool IsValidTile(int tileX, int tileY, Vector2D currentDirection)
+        {
+            (int newTileX, int newTileY) = (tileX + currentDirection.X, tileY + currentDirection.Y);
+            (newTileX, newTileY) = CheckForTunnelTile(newTileX, newTileY);
+            Tile targetTile = board.Grid[newTileY, newTileX];
+            return IsTileWalkable(targetTile);
+        }
+        public (int pixelPosX, int pixelPosY) GetStartCords()
+        {
+            (int pixelPosX, int pixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
+            pixelPosX = pixelPosX + board.TileWidth / 2;
+            return (pixelPosX, pixelPosY);
+        }
         public virtual void ChangeDirection(Vector2D direction)
         {
             this.direction = direction;

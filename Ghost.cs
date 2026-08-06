@@ -14,7 +14,8 @@ namespace PacManGame
         Normal,
         Home,
         Enter,
-        Leave
+        Leave,
+        Exit
     }
     public enum GhostType
     {
@@ -38,8 +39,8 @@ namespace PacManGame
         public int dotLimit;
         public GhostType ghostType;
         public Ghost Blinky;
-
-        public Ghost(int TilePosX, int TilePosY, Board board, int ScatterTileX, int ScatterTileY, PacMan pacMan, GhostType ghostType) : base(TilePosX, TilePosY,board)
+        public bool hasAlignedToDoor;
+        public Ghost(int TilePosX, int TilePosY, Board board, int ScatterTileX, int ScatterTileY, PacMan pacMan, GhostType ghostType) : base(TilePosX, TilePosY, board)
         {
             PacMan = pacMan;
             modeTargetTiles = new Dictionary<ModeType, (int X, int Y)>
@@ -47,26 +48,23 @@ namespace PacManGame
                 { ModeType.Scatter, (ScatterTileX, ScatterTileY) },
                 { ModeType.Chase, CalculateTargetTileForEachGhost() },
             };
-
+            dotCounter = 0;
+            dotLimit = 0;
             this.ghostType = ghostType;
             direction = Vector2D.Left;
             CurrentMode = ModeType.Scatter;
+            hasAlignedToDoor = false;
             Initialize();
         }
 
-        public bool isGhostinHouse()
-        {
-            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
-            return board.Grid[TileY, TileX].IsGhostHouse();
-        }
 
         // Special function to move the Ghost in the middle of two tiles
         public void pixelAdjustmentX()
         {
-            if (ghostType.Equals(GhostType.Clyde))
-                PixelPosX = PixelPosX + board.TileWidth/2;
-            else if (ghostType.Equals(GhostType.Inky))
-                PixelPosX = PixelPosX - board.TileWidth/2;
+            // if (ghostType.Equals(GhostType.Clyde))
+            //     PixelPosX = PixelPosX + board.TileWidth / 2;
+            // else if (ghostType.Equals(GhostType.Inky))
+            //     PixelPosX = PixelPosX - board.TileWidth / 2;
         }
         public override void Initialize()
 
@@ -83,12 +81,15 @@ namespace PacManGame
             {
                 direction = Vector2D.Left;
                 HouseState = GhostHouseState.Normal;
-            }   
+            }
         }
 
         public void CheckHouseStateChange()
         {
-            
+            if (dotCounter > dotLimit)
+            {
+
+            }
         }
         public void Move()
         {
@@ -100,22 +101,44 @@ namespace PacManGame
             modeTargetTiles[ModeType.Chase] = CalculateTargetTileForEachGhost();
 
             // Deal with anything related to Home States First
-            if (!this.HouseState.Equals(GhostHouseState.Normal))
+            if (HouseState.Equals(GhostHouseState.Home))
             {
-                if (HouseState.Equals(GhostHouseState.Home))
-                {
-                    direction = GhostLookAhead();
-                    (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
-                    return;  
-                }
-                else if (HouseState.Equals(GhostHouseState.Leave))
-                {
-                    
-                }
+                direction = GhostLookAhead();
+                (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
+                if (dotCounter >= dotLimit && (PixelPosX, PixelPosY) == GetStartCords())
+                    HouseState = GhostHouseState.Leave;
+                return;
             }
+            else if (HouseState.Equals(GhostHouseState.Leave))
+{
+    if (!hasAlignedToDoor)
+    {
+        Vector2D ghostDirection = ghostType switch
+        {
+            GhostType.Inky => Vector2D.Right,
+            GhostType.Clyde => Vector2D.Left,
+            _ => Vector2D.Zero // Blinky/Pinky already aligned in X
+        };
+
+        if (HasAlignedToDoor(ghostDirection, 13, 17))
+            hasAlignedToDoor = true; // lock it in — never re-check alignment again this trip
+    }
+    else
+    {
+        if (HasExitedDoor(13, 14))
+        {
+            PixelPosX -= board.TileWidth / 2;
+            direction = Vector2D.Left;
+            pendingDirection = Vector2D.Zero;
+            pendingTileX = pendingTileY = int.MinValue;
+            hasAlignedToDoor = false; // reset for next time this ghost re-enters the house
+            HouseState = GhostHouseState.Normal;
+        }
+    }
+    return;
+}
 
 
-            
             if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
             {
                 // Arrived at the tile a previous decision was made for — commit it now
@@ -147,9 +170,31 @@ namespace PacManGame
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightGhostSpeed);
             else if (CurrentMode.Equals(ModeType.Chase) || CurrentMode.Equals(ModeType.Scatter))
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostSpeed);
-            // else if (CurrentMode.Equals(ModeType.Dead))
-            //     speed = 90;
         }
+        public bool HasAlignedToDoor(Vector2D dir, int MiddleTileX, int MiddleTileY)
+        {
+            // GET PINKY'S TILE AND POSIITION AS REFERENCE
+            (int RefPixelX, int RefPixelY) = ConvertTileToPixel(MiddleTileX,MiddleTileY);
+            if ((PixelPosX, PixelPosY) == (RefPixelX + board.TileWidth/2, RefPixelY))
+            {
+            direction = Vector2D.Up;
+            return true;   
+            }
+            (PixelPosX,PixelPosY) = (PixelPosX+dir.X,PixelPosY + dir.Y);
+            return false; 
+        }
+        public bool HasExitedDoor(int MiddleTileX, int MiddleTileY)
+        {
+          // GET BLINKY'S TILE AND POSITION AS REFERENCE HERE
+            (int RefPixelX, int RefPixelY) = ConvertTileToPixel(MiddleTileX,MiddleTileY);
+            if ((PixelPosX, PixelPosY) == (RefPixelX + board.TileWidth/2, RefPixelY))
+            {
+                return true;
+            }
+            (PixelPosX,PixelPosY) = (PixelPosX+Vector2D.Up.X,PixelPosY + Vector2D.Up.Y);
+                return false;
+        }
+
         public Vector2D FrightLookAhead(int tileX, int tileY)
         {
             // if not found at random first then go clockwise
@@ -205,7 +250,6 @@ namespace PacManGame
             else
                 return viableDirections[0];
         }
-
         public Vector2D GhostLookAhead()
         {
             if (!ghostType.Equals(GhostType.Blinky))
@@ -217,32 +261,6 @@ namespace PacManGame
             }
             return Vector2D.Zero;
         }
-        public bool IsValidMove(Vector2D currentDirection)
-        {
-            if (currentDirection.Equals(Vector2D.Zero))
-                return false;
-
-            int newPixelX = PixelPosX + (currentDirection.X);
-            int newPixelY = PixelPosY + (currentDirection.Y);
-            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
-
-            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
-
-            int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
-            int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
-
-            // Wrap outline pixels too (important if offset pushes beyond edges)
-            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
-            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
-
-            Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
-
-            if (!IsTileWalkable(outlineTile))
-                return false;
-
-            Tile targetTile = board.Grid[tileY, tileX];
-            return IsTileWalkable(targetTile);
-        }
 
         public Vector2D Intersection(int tileX, int tileY, List<Vector2D> viableDirections)
         {
@@ -252,7 +270,7 @@ namespace PacManGame
             (int targetTileX, int targetTileY) = modeTargetTiles[CurrentMode];
             foreach (var dir in viableDirections)
             {
-                int dist = EuclideanDistanceBetweenTiles(tileX + dir.X, tileY + dir.Y, targetTileX, targetTileY);
+                int dist = Utils.EuclideanDistanceBetweenTiles(tileX + dir.X, tileY + dir.Y, targetTileX, targetTileY);
                 if (dist < low)
                 {
                     low = dist;
@@ -260,13 +278,6 @@ namespace PacManGame
                 }
             }
             return viableDirection;
-        }
-        public bool IsValidTile(int tileX, int tileY, Vector2D currentDirection)
-        {
-            (int newTileX, int newTileY) = (tileX + currentDirection.X, tileY + currentDirection.Y);
-            (newTileX, newTileY) = CheckForTunnelTile(newTileX, newTileY);
-            Tile targetTile = board.Grid[newTileY, newTileX];
-            return IsTileWalkable(targetTile);
         }
 
         public void UpdateMode(ModeType mode)
@@ -283,28 +294,15 @@ namespace PacManGame
             CurrentMode = mode;
         }
 
-        public static int ManhattanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
-        {
-            return (int)(Math.Abs(TileX - targetTileX) + Math.Abs(TileY - targetTileY));
-        }
-        public static int SquaredEuclideanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
-        {
-            int dx = TileX - targetTileX;
-            int dy = TileY - targetTileY;
-            return dx * dx + dy * dy;
-        }
-        public static int EuclideanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
-        {
-            int dx = TileX - targetTileX;
-            int dy = TileY - targetTileY;
-            return (int)Math.Sqrt(dx * dx + dy * dy);
-        }
-
-
         public (int TileX, int TileY) CalculateTargetTileForEachGhost()
         {
-            (int PacTileX, int PacTileY) = PacMan.GetPacManTile();
 
+            if (HouseState.Equals(GhostHouseState.Leave))
+            {
+                return (13, 14);
+            }
+
+            (int PacTileX, int PacTileY) = PacMan.GetPacManTile();
             if (ghostType.Equals(GhostType.Blinky))
             {
                 return (PacTileX, PacTileY);
@@ -326,11 +324,11 @@ namespace PacManGame
 
                 return (TargetTileX, TargetTileY);
             }
-            //  for Clyde
+
             else
             {
                 (int myTileX, int myTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
-                if (EuclideanDistanceBetweenTiles(PacTileX, PacTileY, myTileX, myTileY) > 8)
+                if (Utils.EuclideanDistanceBetweenTiles(PacTileX, PacTileY, myTileX, myTileY) > 8)
                     return (PacTileX, PacTileY);
                 else
                     return modeTargetTiles[ModeType.Scatter];
@@ -341,6 +339,11 @@ namespace PacManGame
             if (mode.Equals(ModeType.Fright))
                 return ConvertPixelToTile(PixelPosX, PixelPosY);
             return modeTargetTiles[mode];
+        }
+        public bool isGhostinHouse()
+        {
+            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+            return board.Grid[TileY, TileX].IsGhostHouse();
         }
 
         public void SetBlinky(Ghost blinky)
