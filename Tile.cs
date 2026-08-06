@@ -10,7 +10,8 @@ namespace PacManGame
         GhostHouse = 5,
         DeadSpace = 6,
         Tunnel = 7,
-        RedZone = 8
+        RedZone = 8,
+        HouseGate = 9
     }
     public class Tile
     {
@@ -27,21 +28,24 @@ namespace PacManGame
 
         public bool IsWalkable()
         {
-            return this.Type != TileType.Wall && this.Type != TileType.DeadSpace;
+            return !Type.Equals(TileType.Wall) && !Type.Equals(TileType.DeadSpace);
         }
 
         public bool IsWalkableForPacMan()
         {
-            return IsWalkable() && this.Type != TileType.GhostHouse;
+            return IsWalkable() && !Type.Equals(TileType.GhostHouse);
         }
-
+        public bool IsGhostHouse()
+        {
+            return Type.Equals(TileType.GhostHouse);
+        }
         public bool HasDot()
         {
-            return this.Type == TileType.Dot;
+            return Type.Equals(TileType.Dot);
         }
         public bool HasPowerPellet()
         {
-            return this.Type == TileType.PowerPellet;
+            return Type.Equals(TileType.PowerPellet);
         }
 
         public void RemoveDotOrPellet()
@@ -50,11 +54,11 @@ namespace PacManGame
         }
         public bool IsRedZone()
         {
-            return this.Type.Equals(TileType.RedZone);
+            return Type.Equals(TileType.RedZone);
         }
         public bool IsTunnel()
         {
-            return this.Type.Equals(TileType.Tunnel);
+            return Type.Equals(TileType.Tunnel);
         }
     }
 }

@@ -31,7 +31,6 @@ namespace PacManGame
         {
             Move();
             CheckConsumables();
-            CheckGhostCollisions();
         }
         public void Move()
         {
@@ -132,7 +131,7 @@ namespace PacManGame
                     if (ghost.CurrentMode.Equals(ModeType.Fright))
                     {
                         ghost.UpdateMode(ModeType.Dead);
-                        board.Score = 200 * MULT;
+                        board.Score += 200 * MULT;
                         MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
                     }
                     else if (!ghost.CurrentMode.Equals(ModeType.Dead))
@@ -162,6 +161,7 @@ namespace PacManGame
             {
                 tile.RemoveDotOrPellet();
                 FreezeFramesRemaining = 3;
+                MULT = 1;
                 timer.InitiateFrightTimer();
                 foreach (var ghost in ghosts)
                     ghost.UpdateMode(ModeType.Fright);

@@ -23,7 +23,9 @@ namespace PacManGame
         public Actor(int TilePosX, int TilePosY, int speed, Board board)
         {
             this.board = board;
-            (this.PixelPosX, this.PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
+            (PixelPosX, PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
+            PixelPosX += board.TileWidth/2;
+            // PixelPosX += board.TileHeight/2;         
             this.speed = speed;
             accumulator = 0;
         }
