@@ -20,14 +20,20 @@ namespace PacManGame
         protected Board board;
 
         public int accumulator;
-        public Actor(int TilePosX, int TilePosY, int speed, Board board)
+
+        int TilePosX;
+        int TilePosY;
+        public Actor(int tilePosX, int tilePosY, Board board)
         {
             this.board = board;
-            (PixelPosX, PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
-            PixelPosX += board.TileWidth/2;
-            // PixelPosX += board.TileHeight/2;         
-            this.speed = speed;
+            (TilePosX, TilePosY) = (tilePosX,tilePosY);
             accumulator = 0;
+        }
+
+        public virtual void Initialize()
+        {
+            (PixelPosX, PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
+            PixelPosX = PixelPosX + board.TileWidth/2;
         }
 
         public bool CanMoveThisTick()

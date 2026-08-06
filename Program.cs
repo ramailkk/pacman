@@ -14,32 +14,26 @@ namespace PacManGame
         const float DrawScale = 3f;
         // Mode timing
         static ModeType currentMode = ModeType.Scatter; // Start in Scatter
-        
+
         // Add a global pause flag
         static bool isPaused = true; // Start paused
-        
+
         static void Main(string[] args)
         {
             int[][] board = LevelSpecs.board;
-
             Board board1 = new(board, TileSize, TileSize);
-            
-            // Row 23, col 14 is an open dot tile below the ghost house — safe spawn.
-            PacMan pacman = new PacMan(13, 26, 100, board1, 3);
-            
-            // Blinky (Red) - Top right corner
-            Ghost blinky = new Ghost(13, 14, 80, board1, 0, 0, 0, 14, pacman, GhostType.Blinky);
-            // Pinky (Pink) - Top left corner
-            Ghost pinky = new Ghost(13, 17, 80, board1, 26, 0, 0, 14, pacman, GhostType.Pinky);
-            // Inky (Cyan) - Bottom right corner
-            Ghost inky = new Ghost(12, 17, 80, board1, 26, 35, 0, 14, pacman, GhostType.Inky);
-            // Clyde (Orange) - Bottom left corner
-            Ghost clyde = new Ghost(14, 17, 80, board1, 0, 35, 0, 14, pacman, GhostType.Clyde);
+            PacMan pacman = new PacMan(13, 26, board1, 3);
+            Ghost blinky = new Ghost(13, 14, board1, 0, 0, pacman, GhostType.Blinky);
+            Ghost pinky = new Ghost(13, 17, board1, 26, 0, pacman, GhostType.Pinky);
+            Ghost inky = new Ghost(11, 17, board1, 26, 35, pacman, GhostType.Inky);
+            Ghost clyde = new Ghost(15, 17, board1, 0, 35, pacman, GhostType.Clyde);
             inky.SetBlinky(blinky);
-            List<Ghost> ghosts =  [blinky,inky];
+            List<Ghost> ghosts = [blinky, inky, clyde, pinky];
             LevelTimer timer = new LevelTimer(ghosts);
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
+
+
 
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
@@ -60,13 +54,13 @@ namespace PacManGame
                 {
                     HandleInput(pacman);
                     pacman.UpdateLoop();
-                    
+
                     // Update all ghosts
                     foreach (var ghost in ghosts)
                     {
                         ghost.Move();
                     }
-                    
+
                     pacman.CheckGhostCollisions();
                     timer.UpdateTimer();
                 }
@@ -75,19 +69,19 @@ namespace PacManGame
                 Raylib.ClearBackground(Color.Black);
 
                 DrawBoard(board1);
-                
+
                 // Draw visualizations for all ghosts
                 foreach (var ghost in ghosts)
                 {
                     DrawEuclideanPath(ghost);
                     DrawScatterTarget(ghost);
                 }
-                
+
                 DrawPacMan(pacman);
-                
+
                 // Draw all ghosts
                 DrawGhosts(ghosts);
-                
+
                 DrawHud(board1, pacman, ghosts, timer);
 
                 // Draw pause overlay if paused
@@ -156,27 +150,27 @@ namespace PacManGame
         {
             int screenWidth = Raylib.GetScreenWidth();
             int screenHeight = Raylib.GetScreenHeight();
-            
+
             // Draw semi-transparent overlay
             Color overlayColor = new Color(0, 0, 0, 180);
             Raylib.DrawRectangle(0, 0, screenWidth, screenHeight, overlayColor);
-            
+
             // Draw pause text
             string pauseText = "PAUSED";
             string resumeText = "Press 'P' to Resume";
-            
+
             int fontSize = 60;
             int textWidth = Raylib.MeasureText(pauseText, fontSize);
             int textX = (screenWidth - textWidth) / 2;
             int textY = (screenHeight / 2) - 60;
-            
+
             Raylib.DrawText(pauseText, textX, textY, fontSize, Color.Yellow);
-            
+
             fontSize = 30;
             textWidth = Raylib.MeasureText(resumeText, fontSize);
             textX = (screenWidth - textWidth) / 2;
             textY = (screenHeight / 2) + 20;
-            
+
             Raylib.DrawText(resumeText, textX, textY, fontSize, Color.White);
         }
 
@@ -298,9 +292,58 @@ namespace PacManGame
         {
             float screenX = pacman.PixelPosX * DrawScale;
             float screenY = pacman.PixelPosY * DrawScale;
-            float radius = TileSize * DrawScale * 0.45f;
+            float baseRadius = TileSize * DrawScale * 0.45f;
+            float overlapRadius = baseRadius * 1.6f; // Overlap neighboring tiles
 
-            Raylib.DrawCircle((int)screenX, (int)screenY, radius, Color.Yellow);
+            // Draw glow/aura effect
+            Color glowColor = new Color(255, 255, 0, 60);
+            Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius * 1.2f, glowColor);
+
+            // Draw main body
+            Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius, Color.Yellow);
+
+            // Draw Pac-Man's mouth (pie slice)
+            float mouthAngle = 0.3f; // Radians
+            float startAngle = -mouthAngle;
+            float endAngle = mouthAngle;
+
+            // Mouth based on direction
+            if (pacman.direction.Equals(Vector2D.Right))
+            {
+                startAngle = -mouthAngle;
+                endAngle = mouthAngle;
+            }
+            else if (pacman.direction.Equals(Vector2D.Left))
+            {
+                startAngle = (float)Math.PI - mouthAngle;
+                endAngle = (float)Math.PI + mouthAngle;
+            }
+            else if (pacman.direction.Equals(Vector2D.Up))
+            {
+                startAngle = -(float)Math.PI / 2 - mouthAngle;
+                endAngle = -(float)Math.PI / 2 + mouthAngle;
+            }
+            else if (pacman.direction.Equals(Vector2D.Down))
+            {
+                startAngle = (float)Math.PI / 2 - mouthAngle;
+                endAngle = (float)Math.PI / 2 + mouthAngle;
+            }
+
+            // // Draw mouth (black triangle/pie slice)
+            // Raylib.Cricle(
+            //     (int)screenX, (int)screenY,
+            //     overlapRadius,
+            //     startAngle * 180 / (float)Math.PI,
+            //     endAngle * 180 / (float)Math.PI,
+            //     10,
+            //     Color.Black
+            // );
+
+            // Draw eye
+            float eyeX = screenX + overlapRadius * 0.3f;
+            float eyeY = screenY - overlapRadius * 0.2f;
+            float eyeRadius = overlapRadius * 0.2f;
+            Raylib.DrawCircle((int)eyeX, (int)eyeY, eyeRadius, Color.Black);
         }
 
         static void DrawGhosts(List<Ghost> ghosts)
@@ -309,9 +352,10 @@ namespace PacManGame
             {
                 float screenX = ghost.PixelPosX * DrawScale;
                 float screenY = ghost.PixelPosY * DrawScale;
-                float radius = TileSize * DrawScale * 0.45f;
+                float baseRadius = TileSize * DrawScale * 0.45f;
+                float overlapRadius = baseRadius * 1.6f;
 
-                // Assign different colors based on ghost type using the enum
+                // Assign different colors based on ghost type
                 Color ghostColor;
                 if (ghost.CurrentMode == ModeType.Fright)
                 {
@@ -322,29 +366,42 @@ namespace PacManGame
                     ghostColor = ghost.ghostType switch
                     {
                         GhostType.Blinky => Color.Red,
-                        GhostType.Pinky => new Color(255, 182, 193, 255), // Pink
-                        GhostType.Inky => Color.SkyBlue, // Cyan
-                        GhostType.Clyde => new Color(255, 165, 0, 255), // Orange
+                        GhostType.Pinky => new Color(255, 182, 193, 255),
+                        GhostType.Inky => Color.SkyBlue,
+                        GhostType.Clyde => new Color(255, 165, 0, 255),
                         _ => Color.Red
                     };
                 }
 
-                Raylib.DrawCircle((int)screenX, (int)screenY, radius, ghostColor);
-                
-                // Draw ghost eyes (simple white circles)
-                float eyeOffset = radius * 0.35f;
-                float eyeRadius = radius * 0.25f;
-                
-                // Left eye
+                // Draw glow effect
+                Color glowColor = Color.Gold;
+                Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius * 1.3f, glowColor);
+
+                // Ghost body - circular
+                Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius, ghostColor);
+
+                // Ghost bottom wavy edge (floating effect)
+                float waveOffset = overlapRadius * 0.15f;
+                for (int i = -3; i <= 3; i++)
+                {
+                    float x = screenX + i * (overlapRadius * 0.4f);
+                    float y = screenY + overlapRadius - Math.Abs(i) * waveOffset * 0.5f;
+                    float r = overlapRadius * 0.2f;
+                    Raylib.DrawCircle((int)x, (int)y, r, ghostColor);
+                }
+
+                // Eyes (larger for overlap version)
+                float eyeOffset = overlapRadius * 0.35f;
+                float eyeRadius = overlapRadius * 0.3f;
+
+                // White eyes
                 Raylib.DrawCircle((int)(screenX - eyeOffset), (int)(screenY - eyeOffset * 0.3f), eyeRadius, Color.White);
-                // Right eye
                 Raylib.DrawCircle((int)(screenX + eyeOffset), (int)(screenY - eyeOffset * 0.3f), eyeRadius, Color.White);
-                
-                // Draw pupils (small black circles)
+
+                // Pupils
                 float pupilRadius = eyeRadius * 0.5f;
                 float pupilOffset = eyeRadius * 0.3f;
-                
-                // Direction-based pupil placement
+
                 if (ghost.direction.Equals(Vector2D.Left))
                 {
                     Raylib.DrawCircle((int)(screenX - eyeOffset - pupilOffset), (int)(screenY - eyeOffset * 0.3f), pupilRadius, Color.Black);
@@ -360,7 +417,7 @@ namespace PacManGame
                     Raylib.DrawCircle((int)(screenX - eyeOffset), (int)(screenY - eyeOffset * 0.3f - pupilOffset), pupilRadius, Color.Black);
                     Raylib.DrawCircle((int)(screenX + eyeOffset), (int)(screenY - eyeOffset * 0.3f - pupilOffset), pupilRadius, Color.Black);
                 }
-                else // Down or none
+                else
                 {
                     Raylib.DrawCircle((int)(screenX - eyeOffset), (int)(screenY - eyeOffset * 0.3f + pupilOffset), pupilRadius, Color.Black);
                     Raylib.DrawCircle((int)(screenX + eyeOffset), (int)(screenY - eyeOffset * 0.3f + pupilOffset), pupilRadius, Color.Black);

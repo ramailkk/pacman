@@ -1,3 +1,5 @@
+using System.ComponentModel.Design;
+
 namespace PacManGame
 {
 
@@ -17,18 +19,20 @@ namespace PacManGame
         public LevelTimer timer;
         public int FreezeFramesRemaining;
 
-        public PacMan(int x, int y, int speed, Board board, int lives) : base(x, y, speed, board)
+        public PacMan(int x, int y, Board board, int lives) : base(x, y, board)
         {
-            this.LIVES = lives;
-            this.MULT = 1;
-            this.SPREE = false;
-            this.bufferDirection = Vector2D.Zero;
-            this.direction = Vector2D.Down;
+            base.Initialize();
+            LIVES = lives;
+            MULT = 1;
+            SPREE = false;
+            bufferDirection = Vector2D.Zero;
+            direction = Vector2D.Down;
             FreezeFramesRemaining = 0;
         }
 
         public void UpdateLoop()
         {
+            CheckSpeed();
             Move();
             CheckConsumables();
         }
@@ -36,12 +40,10 @@ namespace PacManGame
         {
             if (!this.CanMoveThisTick())
                 return;
-            CheckSpeed();
-            if (FreezeFramesRemaining > 0)
-            {
+            if (FreezeFramesRemaining > 0) { 
                 FreezeFramesRemaining--;
-                return;
-            }
+                    return; 
+            }    
             DecideDirection();
             // Calculate new pixel position based on direction
             int newPixelX = PixelPosX + (direction.X);
@@ -57,6 +59,10 @@ namespace PacManGame
                 else
                     PixelPosX = newPixelX;
             }
+        }
+        public void CheckFreezeFrames()
+        {
+            if (FreezeFramesRemaining > 0) FreezeFramesRemaining--;
         }
         public bool IsValidMove(Vector2D currentDirection)
         {
@@ -130,15 +136,15 @@ namespace PacManGame
                 {
                     if (ghost.CurrentMode.Equals(ModeType.Fright))
                     {
-                        ghost.UpdateMode(ModeType.Dead);
+                        // ghost.UpdateMode(ModeType.Dead);
                         board.Score += 200 * MULT;
                         MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
                     }
-                    else if (!ghost.CurrentMode.Equals(ModeType.Dead))
-                    {
-                        LIVES--;
-                        // Apply some logic about restarting the game
-                    }
+                    // else if (!ghost.CurrentMode.Equals(ModeType.Dead))
+                    // {
+                    //     LIVES--;
+                    //     // Apply some logic about restarting the game
+                    // }
                 }
             }
         }

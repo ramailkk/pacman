@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Numerics;
 using PacManGame;
 namespace PacManGame
 {
@@ -6,11 +7,16 @@ namespace PacManGame
     {
         Chase,
         Scatter,
-        Fright,
-        Dead,
-        Home
+        Fright
     }
-     public enum GhostType
+    public enum GhostHouseState
+    {
+        Normal,
+        Home,
+        Enter,
+        Leave
+    }
+    public enum GhostType
     {
         Blinky,
         Pinky,
@@ -22,67 +28,104 @@ namespace PacManGame
     {
         private Dictionary<ModeType, (int X, int Y)> modeTargetTiles;
         public ModeType CurrentMode;
+        public GhostHouseState HouseState;
         public bool canReverse;
         public PacMan PacMan;
         private Vector2D pendingDirection = Vector2D.Zero;
         private int pendingTileX, pendingTileY;
         public (int X, int Y) ScatterTarget => modeTargetTiles[ModeType.Scatter];
-
         public int dotCounter;
         public int dotLimit;
         public GhostType ghostType;
         public Ghost Blinky;
 
-        public Ghost(int TilePosX, int TilePosY, int speed, Board board, int ScatterTileX, int ScatterTileY, int FrightTileX, int FrightTileY, PacMan pacMan, GhostType ghostType) : base(TilePosX, TilePosY, speed, board)
+        public Ghost(int TilePosX, int TilePosY, Board board, int ScatterTileX, int ScatterTileY, PacMan pacMan, GhostType ghostType) : base(TilePosX, TilePosY,board)
         {
             PacMan = pacMan;
             modeTargetTiles = new Dictionary<ModeType, (int X, int Y)>
             {
                 { ModeType.Scatter, (ScatterTileX, ScatterTileY) },
                 { ModeType.Chase, CalculateTargetTileForEachGhost() },
-                { ModeType.Dead, (FrightTileX, FrightTileY) },
             };
 
+            this.ghostType = ghostType;
             direction = Vector2D.Left;
             CurrentMode = ModeType.Scatter;
-            this.ghostType = ghostType;
+            Initialize();
         }
 
         public bool isGhostinHouse()
         {
-            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX,PixelPosY);
-            return board.Grid[TileY,TileX].IsGhostHouse();
+            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+            return board.Grid[TileY, TileX].IsGhostHouse();
         }
-        public void GhostLookAhead()
+
+        // Special function to move the Ghost in the middle of two tiles
+        public void pixelAdjustmentX()
+        {
+            if (ghostType.Equals(GhostType.Clyde))
+                PixelPosX = PixelPosX + board.TileWidth/2;
+            else if (ghostType.Equals(GhostType.Inky))
+                PixelPosX = PixelPosX - board.TileWidth/2;
+        }
+        public override void Initialize()
+
+        {
+            base.Initialize();
+            //  Further pixel change depending on where the Ghost is placed
+            pixelAdjustmentX();
+            if (this.isGhostinHouse())
+            {
+                direction = ghostType.Equals(GhostType.Pinky) ? Vector2D.Down : Vector2D.Up;
+                HouseState = GhostHouseState.Home;
+            }
+            else
+            {
+                direction = Vector2D.Left;
+                HouseState = GhostHouseState.Normal;
+            }   
+        }
+
+        public void CheckHouseStateChange()
         {
             
         }
         public void Move()
         {
-             (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+            (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
             // check Speed first
-            CheckSpeedForGhost(TileX,TileY);
+            CheckSpeedForGhost(TileX, TileY);
             if (!CanMoveThisTick())
                 return;
             modeTargetTiles[ModeType.Chase] = CalculateTargetTileForEachGhost();
 
+            // Deal with anything related to Home States First
+            if (!this.HouseState.Equals(GhostHouseState.Normal))
+            {
+                if (HouseState.Equals(GhostHouseState.Home))
+                {
+                    direction = GhostLookAhead();
+                    (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
+                    return;  
+                }
+                else if (HouseState.Equals(GhostHouseState.Leave))
+                {
+                    
+                }
+            }
+
+
+            
             if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
             {
                 // Arrived at the tile a previous decision was made for — commit it now
                 if (TileX == pendingTileX && TileY == pendingTileY && !pendingDirection.Equals(Vector2D.Zero))
                     direction = pendingDirection;
-
                 // Pre-decide the turn for the *next* tile, to be committed when we get there
                 int nextTileX = TileX + direction.X;
                 int nextTileY = TileY + direction.Y;
                 (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX, nextTileY);
-
-                if (CurrentMode.Equals(ModeType.Home))
-                {
-                    
-                }
-
-                else if (!CurrentMode.Equals(ModeType.Fright))
+                if (!CurrentMode.Equals(ModeType.Fright))
                     pendingDirection = NormalLookAhead(nextTileX, nextTileY);
                 else
                     pendingDirection = FrightLookAhead(nextTileX, nextTileY);
@@ -104,8 +147,8 @@ namespace PacManGame
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightGhostSpeed);
             else if (CurrentMode.Equals(ModeType.Chase) || CurrentMode.Equals(ModeType.Scatter))
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostSpeed);
-            else if (CurrentMode.Equals(ModeType.Dead))
-                speed = 90;
+            // else if (CurrentMode.Equals(ModeType.Dead))
+            //     speed = 90;
         }
         public Vector2D FrightLookAhead(int tileX, int tileY)
         {
@@ -137,18 +180,19 @@ namespace PacManGame
 
             foreach (var dir in directions)
             {
-                if (canReverse){
-                        canReverse = false;
-                        return direction.Reverse();
-                    }
+                if (canReverse)
+                {
+                    canReverse = false;
+                    return direction.Reverse();
+                }
                 // No going back
                 if (dir.Equals(direction.Reverse()))
                     continue;
 
                 // REDZONE CANT GO UP IN THESE TILES
-                if (board.Grid[tileY,tileX].IsRedZone() && dir.Equals(Vector2D.Up))
+                if (board.Grid[tileY, tileX].IsRedZone() && dir.Equals(Vector2D.Up))
                     continue;
-                
+
                 if (IsValidTile(tileX, tileY, dir))
                     viableDirections.Add(dir);
             }
@@ -160,6 +204,44 @@ namespace PacManGame
                 return Vector2D.Zero;
             else
                 return viableDirections[0];
+        }
+
+        public Vector2D GhostLookAhead()
+        {
+            if (!ghostType.Equals(GhostType.Blinky))
+            {
+                if (IsValidMove(direction))
+                    return direction;
+                else
+                    return direction.Reverse();
+            }
+            return Vector2D.Zero;
+        }
+        public bool IsValidMove(Vector2D currentDirection)
+        {
+            if (currentDirection.Equals(Vector2D.Zero))
+                return false;
+
+            int newPixelX = PixelPosX + (currentDirection.X);
+            int newPixelY = PixelPosY + (currentDirection.Y);
+            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
+
+            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
+
+            int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
+            int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
+
+            // Wrap outline pixels too (important if offset pushes beyond edges)
+            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
+            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
+
+            Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
+
+            if (!IsTileWalkable(outlineTile))
+                return false;
+
+            Tile targetTile = board.Grid[tileY, tileX];
+            return IsTileWalkable(targetTile);
         }
 
         public Vector2D Intersection(int tileX, int tileY, List<Vector2D> viableDirections)
@@ -193,10 +275,6 @@ namespace PacManGame
             {
                 // Apply Fright timer starting logic here
             }
-            else if (mode.Equals(ModeType.Dead))
-            {
-                // Apply being dead logic here
-            }
             // Reversal logic
             if (CurrentMode.Equals(ModeType.Chase) && (mode.Equals(ModeType.Scatter) || mode.Equals(ModeType.Fright)))
                 canReverse = true;
@@ -210,25 +288,26 @@ namespace PacManGame
             return (int)(Math.Abs(TileX - targetTileX) + Math.Abs(TileY - targetTileY));
         }
         public static int SquaredEuclideanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
-            {
-                int dx = TileX - targetTileX;
-                int dy = TileY - targetTileY;
-                return dx * dx + dy * dy;
-            }
+        {
+            int dx = TileX - targetTileX;
+            int dy = TileY - targetTileY;
+            return dx * dx + dy * dy;
+        }
         public static int EuclideanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
-            {
-                int dx = TileX - targetTileX;
-                int dy = TileY - targetTileY;
-                return (int)Math.Sqrt(dx * dx + dy * dy);
-            }
+        {
+            int dx = TileX - targetTileX;
+            int dy = TileY - targetTileY;
+            return (int)Math.Sqrt(dx * dx + dy * dy);
+        }
 
-        
-        public (int TileX,int TileY) CalculateTargetTileForEachGhost()
+
+        public (int TileX, int TileY) CalculateTargetTileForEachGhost()
         {
             (int PacTileX, int PacTileY) = PacMan.GetPacManTile();
-            
-            if (ghostType.Equals(GhostType.Blinky)){
-             return (PacTileX,PacTileY);
+
+            if (ghostType.Equals(GhostType.Blinky))
+            {
+                return (PacTileX, PacTileY);
             }
             else if (ghostType.Equals(GhostType.Pinky))
             {
@@ -236,7 +315,7 @@ namespace PacManGame
                         PacTileY + PacMan.direction.Y * 4);
             }
             else if (ghostType.Equals(GhostType.Inky))
-{
+            {
                 PacTileX = PacTileX + PacMan.direction.X * 2;
                 PacTileY = PacTileY + PacMan.direction.Y * 2;
 
@@ -244,15 +323,15 @@ namespace PacManGame
 
                 int TargetTileX = PacTileX + (PacTileX - BlinkyTileX);
                 int TargetTileY = PacTileY + (PacTileY - BlinkyTileY);
-                
+
                 return (TargetTileX, TargetTileY);
             }
             //  for Clyde
             else
             {
                 (int myTileX, int myTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
-                if (EuclideanDistanceBetweenTiles(PacTileX,PacTileY, myTileX, myTileY) > 8)
-                    return (PacTileX,PacTileY);
+                if (EuclideanDistanceBetweenTiles(PacTileX, PacTileY, myTileX, myTileY) > 8)
+                    return (PacTileX, PacTileY);
                 else
                     return modeTargetTiles[ModeType.Scatter];
             }
@@ -260,7 +339,7 @@ namespace PacManGame
         public (int X, int Y) GetTargetForMode(ModeType mode)
         {
             if (mode.Equals(ModeType.Fright))
-                return ConvertPixelToTile(PixelPosX,PixelPosY);
+                return ConvertPixelToTile(PixelPosX, PixelPosY);
             return modeTargetTiles[mode];
         }
 

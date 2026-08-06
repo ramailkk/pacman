@@ -28,7 +28,7 @@ namespace PacManGame
 
         public bool IsWalkable()
         {
-            return !Type.Equals(TileType.Wall) && !Type.Equals(TileType.DeadSpace);
+            return !Type.Equals(TileType.Wall) && !Type.Equals(TileType.DeadSpace) && !Type.Equals(TileType.HouseGate);
         }
 
         public bool IsWalkableForPacMan()
