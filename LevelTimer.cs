@@ -63,7 +63,8 @@ public class LevelTimer
     {
         foreach (var ghost in Ghosts)
         {
-            ghost.UpdateMode(Mode);
+            if (!ghost.CurrentMode.Equals(ModeType.Dead))
+                ghost.UpdateMode(Mode);
         }
     }
     public bool isFrightMode()

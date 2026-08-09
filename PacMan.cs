@@ -105,15 +105,16 @@ namespace PacManGame
                 {
                     if (ghost.CurrentMode.Equals(ModeType.Fright))
                     {
-                        // ghost.UpdateMode(ModeType.Dead);
+                        ghost.UpdateMode(ModeType.Dead);
+                        ghost.UpdateGhostHouseState(GhostHouseState.Enter);
                         board.Score += 200 * MULT;
                         MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
                     }
-                    // else if (!ghost.CurrentMode.Equals(ModeType.Dead))
-                    // {
-                    //     LIVES--;
-                    //     // Apply some logic about restarting the game
-                    // }
+                    else if (!ghost.CurrentMode.Equals(ModeType.Fright) && ghost.CurrentMode.Equals(GhostHouseState.Normal))
+                    {
+                        LIVES--;
+                        // Apply some logic about restarting the game
+                    }
                 }
             }
         }
@@ -139,7 +140,10 @@ namespace PacManGame
                 MULT = 1;
                 timer.InitiateFrightTimer();
                 foreach (var ghost in ghosts)
-                    ghost.UpdateMode(ModeType.Fright);
+                {
+                    if (!ghost.CurrentMode.Equals(ModeType.Dead))
+                        ghost.UpdateMode(ModeType.Fright);
+                }
                 board.UpdatePowerScore();
             }
             else if (tile.HasDot())
