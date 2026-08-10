@@ -238,6 +238,8 @@ namespace PacManGame
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostTunnelSpeed);
             else if (CurrentMode.Equals(ModeType.Fright))
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightGhostSpeed);
+            else if (isCruiseElroyActivated())
+                return;
             else if (CurrentMode.Equals(ModeType.Chase) || CurrentMode.Equals(ModeType.Scatter))
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostSpeed);
         }
@@ -349,12 +351,12 @@ namespace PacManGame
         public Vector2D Intersection(int tileX, int tileY, List<Vector2D> viableDirections)
         {
             // 
-            int low = int.MaxValue;
+            double low = double.MaxValue;
             Vector2D viableDirection = Vector2D.Zero;
             (int targetTileX, int targetTileY) = modeTargetTiles[CurrentMode];
             foreach (var dir in viableDirections)
             {
-                int dist = Utils.ManhattanDistanceBetweenTiles(tileX + dir.X, tileY + dir.Y, targetTileX, targetTileY);
+                double dist = Utils.EuclideanDistanceBetweenTiles(tileX + dir.X, tileY + dir.Y, targetTileX, targetTileY);
                 if (dist < low)
                 {
                     low = dist;
@@ -371,13 +373,15 @@ namespace PacManGame
             {
 
             }
+            if (mode.Equals(ModeType.Scatter) && isCruiseElroyActivated())
+                mode = ModeType.Chase;
 
-            if (CurrentMode.Equals(ModeType.Dead) && mode.Equals(mode.Equals(ModeType.Fright)))
+                if (CurrentMode.Equals(ModeType.Dead) && mode.Equals(mode.Equals(ModeType.Fright)))
                 return;
             // Reversal logic
             if (CurrentMode.Equals(ModeType.Chase) && (mode.Equals(ModeType.Scatter) || mode.Equals(ModeType.Fright)))
                 canReverse = true;
-            if (CurrentMode.Equals(ModeType.Scatter) && mode.Equals(ModeType.Chase))
+            else if (CurrentMode.Equals(ModeType.Scatter) && mode.Equals(ModeType.Chase))
                 canReverse = true;
             CurrentMode = mode;
         }
@@ -419,7 +423,7 @@ namespace PacManGame
             else
             {
                 (int myTileX, int myTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
-                if (Utils.EuclideanDistanceBetweenTiles(PacTileX, PacTileY, myTileX, myTileY) > 8)
+                if (Utils.ManhattanDistanceBetweenTiles(PacTileX, PacTileY, myTileX, myTileY) > 8)
                     return (PacTileX, PacTileY);
                 else
                     return modeTargetTiles[ModeType.Scatter];
@@ -440,6 +444,27 @@ namespace PacManGame
         public void SetBlinky(Ghost blinky)
         {
             Blinky = blinky;
+        }
+        public bool isCruiseElroyActivated()
+        {
+            if (ghostType.Equals(GhostType.Blinky))
+            {
+                if (board.RemainingDots <= LevelSpecs.GetEntry(board.LEVEL, LevelSpecs.Elroy2DotsLeft))
+                {
+                    this.speed = LevelSpecs.GetEntry(board.LEVEL, LevelSpecs.Elroy2Speed);
+                    return true;
+                }
+                else if (board.RemainingDots <= LevelSpecs.GetEntry(board.LEVEL, LevelSpecs.Elroy1DotsLeft))
+                {
+                    this.speed = LevelSpecs.GetEntry(board.LEVEL, LevelSpecs.Elroy1Speed);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return false;
         }
 
         public void SetDotLimit()

@@ -24,9 +24,9 @@ namespace PacManGame
             int[][] board = LevelSpecs.board;
             Board board1 = new(board, TileSize, TileSize);
             PacMan pacman = new PacMan(13, 26, board1);
-            Ghost blinky = new Ghost(13, 14, board1, 0, 0, pacman, GhostType.Blinky);
-            Ghost pinky = new Ghost(13, 17, board1, 26, 0, pacman, GhostType.Pinky);
-            Ghost inky = new Ghost(11, 17, board1, 26, 35, pacman, GhostType.Inky);
+            Ghost blinky = new Ghost(13, 14, board1, 26, 0, pacman, GhostType.Blinky);
+            Ghost pinky = new Ghost(13, 17, board1, 3, 0, pacman, GhostType.Pinky);
+            Ghost inky = new Ghost(11, 17, board1, 28, 35, pacman, GhostType.Inky);
             Ghost clyde = new Ghost(15, 17, board1, 0, 35, pacman, GhostType.Clyde);
             inky.SetBlinky(blinky);
             List<Ghost> ghosts = [blinky, inky, clyde, pinky];
@@ -34,8 +34,8 @@ namespace PacManGame
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
             timer.SetCurrentLevel(board1.LEVEL);
-
-
+            Console.WriteLine(board1.Grid.GetLength(0));
+            Console.WriteLine(board1.Grid.GetLength(1));
 
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
@@ -73,11 +73,11 @@ namespace PacManGame
                 DrawBoard(board1);
 
                 // // Draw visualizations for all ghosts
-                // foreach (var ghost in ghosts)
-                // {
-                //     DrawEuclideanPath(ghost);
-                //     DrawScatterTarget(ghost);
-                // }
+                foreach (var ghost in ghosts)
+                {
+                    DrawEuclideanPath(ghost);
+                    DrawScatterTarget(ghost);
+                }
 
                 DrawPacMan(pacman);
 
@@ -425,7 +425,7 @@ namespace PacManGame
         {
             int hudY = board.Grid.GetLength(0) * TileSize * (int)DrawScale + 5;
 
-            string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.TotalDots}  Level: {timer.CurrentLevel}";
+            string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.RemainingDots}  B speed: {ghosts[0].speed}";
             Raylib.DrawText(line1, 10, hudY, 20, Color.White);
 
             (int tileX, int tileY) = pacman.ConvertPixelToTile(pacman.PixelPosX, pacman.PixelPosY);

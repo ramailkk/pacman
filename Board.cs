@@ -21,8 +21,11 @@ namespace PacManGame
         public int TileHeight { get; }
         public int TileWidth { get; }
         public int Score { get; set; }
-        public int TotalPellets { get; private set; }
-        public int TotalDots { get; private set; }
+        public int TotalDots {get; private set;}
+        public int TotalEnergizers { get; private set; }
+        public int TotalSmallDots { get; private set; }
+        public int RemainingDots { get; private set; }
+        
         public Tile[,] Grid { get; private set; }
         public int[][] Reference;
         public int LEVEL;
@@ -34,12 +37,18 @@ namespace PacManGame
             Reference = reference;
 
             Score = 0;
+            TotalSmallDots = 0;
+            TotalEnergizers = 0;
             TotalDots = 0;
-            TotalPellets = 0;
+            RemainingDots = 0;
 
             Grid = SetupBoard(reference);
             LEVEL = 1;
         }
+        // public void Main(string[] args)
+        // {
+        //     Board board = new Board()
+        // }
         private Tile[,] SetupBoard(int[][] reference)
         {
             Tile[,] tiles = new Tile[reference.Length, reference[0].Length];
@@ -52,26 +61,32 @@ namespace PacManGame
                     TileType type = IntToTile[value];
                     tiles[i, j] = new Tile(TileHeight, TileWidth, type);
                     if (type == TileType.Dot)
-                        TotalDots++;
+                        TotalSmallDots++;
                     else if (type == TileType.PowerPellet)
-                        TotalPellets++;
+                        TotalEnergizers++;
                 }
             }
+            TotalDots = TotalSmallDots + TotalEnergizers;
+            RemainingDots = TotalDots;
             return tiles;
         }
         public void UpdateDotScore()
         {
             Score += 10;
+            RemainingDots--;
         }
         public void UpdatePowerScore()
         {
             Score += 50;
+            RemainingDots--;
         }
         public void SetupNextLevel()
         {
             Score = 0;
             TotalDots = 0;
-            TotalPellets = 0;
+            TotalEnergizers = 0;
+            TotalSmallDots = 0;
+            RemainingDots = 0;
             Grid = SetupBoard(Reference);
             LEVEL++;
         }

@@ -155,6 +155,7 @@ namespace PacManGame
             {
                 tile.RemoveDotOrPellet();
                 FreezeFramesRemaining = 3;
+                EatenDotCounter++;
                 MULT = 1;
                 timer.InitiateFrightTimer();
                 foreach (var ghost in ghosts)
@@ -163,6 +164,8 @@ namespace PacManGame
                         ghost.UpdateMode(ModeType.Fright);
                 }
                 board.UpdatePowerScore();
+                if (board.RemainingDots == 0)
+                    ResetForNextLevel();
             }
             else if (tile.HasDot())
             {
@@ -170,9 +173,8 @@ namespace PacManGame
                 FreezeFramesRemaining = 1;
                 EatenDotCounter++;
                 board.UpdateDotScore();
-
                 // Reseting for Next Level here
-                if (EatenDotCounter == board.TotalDots)
+                if (board.RemainingDots == 0)
                     ResetForNextLevel();
             }
         }

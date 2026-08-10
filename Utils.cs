@@ -12,11 +12,11 @@ namespace PacManGame
             int dy = TileY - targetTileY;
             return dx * dx + dy * dy;
         }
-        public static int EuclideanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
+        public static double EuclideanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
         {
             int dx = TileX - targetTileX;
             int dy = TileY - targetTileY;
-            return (int)Math.Sqrt(dx * dx + dy * dy);
+            return Math.Sqrt(dx * dx + dy * dy);
         }
     }
 }
