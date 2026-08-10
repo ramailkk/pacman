@@ -20,9 +20,10 @@ namespace PacManGame
 
         static void Main(string[] args)
         {
+            
             int[][] board = LevelSpecs.board;
             Board board1 = new(board, TileSize, TileSize);
-            PacMan pacman = new PacMan(13, 26, board1, 3);
+            PacMan pacman = new PacMan(13, 26, board1);
             Ghost blinky = new Ghost(13, 14, board1, 0, 0, pacman, GhostType.Blinky);
             Ghost pinky = new Ghost(13, 17, board1, 26, 0, pacman, GhostType.Pinky);
             Ghost inky = new Ghost(11, 17, board1, 26, 35, pacman, GhostType.Inky);
@@ -32,6 +33,7 @@ namespace PacManGame
             LevelTimer timer = new LevelTimer(ghosts);
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
+            timer.SetCurrentLevel(board1.LEVEL);
 
 
 
@@ -70,12 +72,12 @@ namespace PacManGame
 
                 DrawBoard(board1);
 
-                // Draw visualizations for all ghosts
-                foreach (var ghost in ghosts)
-                {
-                    DrawEuclideanPath(ghost);
-                    DrawScatterTarget(ghost);
-                }
+                // // Draw visualizations for all ghosts
+                // foreach (var ghost in ghosts)
+                // {
+                //     DrawEuclideanPath(ghost);
+                //     DrawScatterTarget(ghost);
+                // }
 
                 DrawPacMan(pacman);
 
@@ -369,6 +371,7 @@ namespace PacManGame
                     };
                 }
 
+                if (!ghost.CurrentMode.Equals(ModeType.Dead)){
                 // Ghost body - circular
                 Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius, ghostColor);
 
@@ -380,10 +383,11 @@ namespace PacManGame
                     float y = screenY + overlapRadius - Math.Abs(i) * waveOffset * 0.5f;
                     float r = overlapRadius * 0.2f;
                     Raylib.DrawCircle((int)x, (int)y, r, ghostColor);
+                    }
                 }
 
-                // Eyes (larger for overlap version)
-                float eyeOffset = overlapRadius * 0.35f;
+                    // Eyes (larger for overlap version)
+                    float eyeOffset = overlapRadius * 0.35f;
                 float eyeRadius = overlapRadius * 0.3f;
 
                 // White eyes
@@ -421,7 +425,7 @@ namespace PacManGame
         {
             int hudY = board.Grid.GetLength(0) * TileSize * (int)DrawScale + 5;
 
-            string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.DotCounter}";
+            string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.TotalDots}  Level: {timer.CurrentLevel}";
             Raylib.DrawText(line1, 10, hudY, 20, Color.White);
 
             (int tileX, int tileY) = pacman.ConvertPixelToTile(pacman.PixelPosX, pacman.PixelPosY);

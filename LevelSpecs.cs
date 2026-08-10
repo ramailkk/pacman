@@ -61,8 +61,12 @@ namespace PacManGame
         public static readonly int[] FrightTimeSeconds = { 6, 5, 4, 3, 2, 5, 2, 2, 1, 5, 2, 1, 1, 3, 1, 5, 0, 1, 0, 0, 0 };
         public static readonly int[] FlashCount = { 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 3, 3, 5, 3, 5, 0, 3, 0, 0, 0 };
 
-        public static int Level;
+        //  Local Limit Counters -> Blinky is already outside and Pinky goes first
 
+
+        public static readonly int[] InkyLocalDotLimit = { 30, 0, 0 };
+        // just add the first Inkys entries to Clyde Local Dot entries to simplify logic
+        public static readonly int[] ClydeLocalDotLimit = { 90, 50, 0 };
         public static int GetEntry(int Level, int[] array)
         {
             Level = Math.Min(Level, array.Length) - 1;

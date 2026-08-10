@@ -24,23 +24,35 @@ namespace PacManGame
         Inky,
         Clyde
     }
+
     // up, left, down, right preference for tiles if all are same distance away from targetTile. 
     public class Ghost : Actor
     {
         private Dictionary<ModeType, (int X, int Y)> modeTargetTiles;
+
+        // Primary Mode state and Secondary House State
         public ModeType CurrentMode;
         public GhostHouseState HouseState;
-        public bool canReverse;
+
         public PacMan PacMan;
+
+        // Directional stuff
         private Vector2D pendingDirection = Vector2D.Zero;
         private int pendingTileX, pendingTileY;
         public (int X, int Y) ScatterTarget => modeTargetTiles[ModeType.Scatter];
-        public int dotCounter;
-        public int dotLimit;
+
+        // Leaving House Conditions and variables
+        public int DotLimit;
+
+        // ghostType usages
         public GhostType ghostType;
         public Ghost Blinky;
+
+
+        // movement flags
         public bool hasAlignedToDoor;
         public bool hasEnteredDoor;
+        public bool canReverse;
         public Ghost(int TilePosX, int TilePosY, Board board, int ScatterTileX, int ScatterTileY, PacMan pacMan, GhostType ghostType) : base(TilePosX, TilePosY, board)
         {
             PacMan = pacMan;
@@ -48,14 +60,9 @@ namespace PacManGame
             {
                 { ModeType.Scatter, (ScatterTileX, ScatterTileY) },
                 { ModeType.Chase, CalculateTargetTileForEachGhost() },
-                { ModeType.Dead, (13,14)}
+                { ModeType.Dead, (13,14)} //Representing DoorTile that ghosts will run to get to GhostHouse
             };
-            dotCounter = 0;
-            dotLimit = 0;
             this.ghostType = ghostType;
-            direction = Vector2D.Left;
-            CurrentMode = ModeType.Scatter;
-            hasAlignedToDoor = false;
             Initialize();
         }
 
@@ -71,9 +78,16 @@ namespace PacManGame
         public override void Initialize()
 
         {
+            // Base position adjustment
             base.Initialize();
-            //  Further pixel change depending on where the Ghost is placed
             pixelAdjustmentX();
+
+            // Extra varaibles reset
+            direction = Vector2D.Left;
+            CurrentMode = ModeType.Scatter;
+            hasAlignedToDoor = false;
+            SetDotLimit();
+            // House Check
             if (this.isGhostinHouse())
             {
                 direction = ghostType.Equals(GhostType.Pinky) ? Vector2D.Down : Vector2D.Up;
@@ -96,7 +110,7 @@ namespace PacManGame
             // Deal with anything related to Home States First
             if (HouseState.Equals(GhostHouseState.Home))
             {
-                if (dotCounter >= dotLimit && (PixelPosX, PixelPosY) == GetStartCords())
+                if (PacMan.EatenDotCounter >= DotLimit && (PixelPosX, PixelPosY) == GetStartCords())
                 {
                     HouseState = GhostHouseState.Leave;
                 }
@@ -305,7 +319,7 @@ namespace PacManGame
                     continue;
 
                 // REDZONE CANT GO UP IN THESE TILES
-                if (board.Grid[tileY, tileX].IsRedZone() && dir.Equals(Vector2D.Up))
+                if (board.Grid[tileY, tileX].IsRedZone() && !CurrentMode.Equals(ModeType.Dead) && dir.Equals(Vector2D.Up))
                     continue;
 
                 if (IsValidTile(tileX, tileY, dir))
@@ -426,6 +440,22 @@ namespace PacManGame
         public void SetBlinky(Ghost blinky)
         {
             Blinky = blinky;
+        }
+
+        public void SetDotLimit()
+        {
+            switch (this.ghostType)
+            {
+                case GhostType.Inky:
+                    DotLimit = LevelSpecs.GetEntry(board.LEVEL, LevelSpecs.InkyLocalDotLimit);
+                    break;
+                case GhostType.Clyde:
+                    DotLimit = LevelSpecs.GetEntry(board.LEVEL, LevelSpecs.ClydeLocalDotLimit);
+                    break;
+                default:
+                    DotLimit = 0;
+                    break;
+            }
         }
     }
 }

@@ -21,23 +21,25 @@ namespace PacManGame
         public int TileHeight { get; }
         public int TileWidth { get; }
         public int Score { get; set; }
-        public int PelletCounter { get; private set; }
-        public int DotCounter { get; private set; }
+        public int TotalPellets { get; private set; }
+        public int TotalDots { get; private set; }
         public Tile[,] Grid { get; private set; }
-
+        public int[][] Reference;
         public int LEVEL;
 
         public Board(int[][] reference, int tileWidth, int tileHeight)
         {
             TileHeight = tileHeight;
             TileWidth = tileWidth;
+            Reference = reference;
+
             Score = 0;
-            PelletCounter = 0;
-            DotCounter = 0;
+            TotalDots = 0;
+            TotalPellets = 0;
+
             Grid = SetupBoard(reference);
             LEVEL = 1;
         }
-
         private Tile[,] SetupBoard(int[][] reference)
         {
             Tile[,] tiles = new Tile[reference.Length, reference[0].Length];
@@ -50,9 +52,9 @@ namespace PacManGame
                     TileType type = IntToTile[value];
                     tiles[i, j] = new Tile(TileHeight, TileWidth, type);
                     if (type == TileType.Dot)
-                        DotCounter++;
+                        TotalDots++;
                     else if (type == TileType.PowerPellet)
-                        PelletCounter++;
+                        TotalPellets++;
                 }
             }
             return tiles;
@@ -60,12 +62,18 @@ namespace PacManGame
         public void UpdateDotScore()
         {
             Score += 10;
-            DotCounter--;
         }
         public void UpdatePowerScore()
         {
             Score += 50;
-            PelletCounter--;
+        }
+        public void SetupNextLevel()
+        {
+            Score = 0;
+            TotalDots = 0;
+            TotalPellets = 0;
+            Grid = SetupBoard(Reference);
+            LEVEL++;
         }
     }
 }

@@ -2,32 +2,30 @@ using System.ComponentModel.Design;
 
 namespace PacManGame
 {
-
-    public enum State
-    {
-        Normal,
-        Power,
-        Dead,
-    }
     public class PacMan : Actor
     {
         public int LIVES;
         public int MULT;
-        public bool SPREE;
         public Vector2D bufferDirection;
         public List<Ghost> ghosts;
         public LevelTimer timer;
+        public int EatenDotCounter;
         public int FreezeFramesRemaining;
+        public bool HasDied;
+        public PacMan(int x, int y, Board board) : base(x, y, board)
+        {
+            this.Initialize();
+            LIVES = 3;
+        }
 
-        public PacMan(int x, int y, Board board, int lives) : base(x, y, board)
+        public override void Initialize()
         {
             base.Initialize();
-            LIVES = lives;
             MULT = 1;
-            SPREE = false;
             bufferDirection = Vector2D.Zero;
-            direction = Vector2D.Down;
+            direction = Vector2D.Left;
             FreezeFramesRemaining = 0;
+            HasDied = false;
         }
 
         public void UpdateLoop()
@@ -112,16 +110,34 @@ namespace PacManGame
                         board.Score += 200 * MULT;
                         MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
                     }
-                    else if (ghost.CurrentMode.Equals(ModeType.Fright) && ghost.CurrentMode.Equals(GhostHouseState.Normal))
+                    else if (!ghost.CurrentMode.Equals(ModeType.Fright) && !ghost.CurrentMode.Equals(ModeType.Dead))
                     {
                         LIVES--;
-                        // Apply some logic about restarting the game
+                        HasDied = true;
+                        ResetGame();
                     }
                 }
             }
         }
 
+        public void ResetGame()
+        {
+            this.Initialize();
+            foreach (var ghost in ghosts)
+            {
+                ghost.Initialize();
+            }
+            timer.Initialize();
+        }
 
+        public void ResetForNextLevel()
+        {
+            HasDied = false;
+            EatenDotCounter = 0;
+            board.SetupNextLevel();
+            timer.CurrentLevel++;
+            ResetGame();
+        }
         public void CheckSpeed()
         {
             int Level = board.LEVEL;
@@ -152,7 +168,12 @@ namespace PacManGame
             {
                 tile.RemoveDotOrPellet();
                 FreezeFramesRemaining = 1;
+                EatenDotCounter++;
                 board.UpdateDotScore();
+
+                // Reseting for Next Level here
+                if (EatenDotCounter == board.TotalDots)
+                    ResetForNextLevel();
             }
         }
     }

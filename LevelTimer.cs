@@ -12,18 +12,26 @@ public class LevelTimer
     public List<Ghost> Ghosts;
     public LevelTimer(List<Ghost> ghosts)
     {
+        Ghosts = ghosts;
+        Initialize();
+        GlobalSchedule =
+        [
+            [7 * 60, 20 * 60, 7 * 60, 20 * 60, 5 * 60, 20 * 60, 5 * 60], //Level 1 
+            [7 * 60, 20 * 60, 7 * 60, 20 * 60, 5 * 60, 1033 * 60, 1],    //Level 2-4
+            [5 * 60, 20 * 60, 5 * 60, 20 * 60, 5 * 60, 1037 * 60, 1]     //Level 5+
+        ];
+        FrightSchedule = new int[] { 5 * 60, 5 * 60, 4 * 60, 3 * 60, 2 * 60, 5 * 60, 2 * 60, 2 * 60, 1 * 60, 5 * 60, 2 * 60, 1 * 60, 1 * 60, 3 * 60, 1 * 60, 1 * 60 };
+    }
+
+    public void Initialize()
+    {
         ModeTimer = 0;
         ModeTimerIndex = 0;
         GlobalMode = ModeType.Scatter;
-        GlobalSchedule = new int[][]
-        {
-            new int[] { 7 * 60, 20 * 60, 7 * 60, 20 * 60, 5 * 60, 20 * 60, 5 * 60 }, //Level 1 
-            new int[] { 7 * 60, 20 * 60, 7 * 60, 20 * 60, 5 * 60, 1033 * 60, 1 },    //Level 2-4
-            new int[] { 5 * 60, 20 * 60, 5 * 60, 20 * 60, 5 * 60, 1037 * 60, 1 }     //Level 5+
-        };
-        FrightSchedule = new int[] { 5 * 60, 5 * 60, 4 * 60, 3 * 60, 2 * 60, 5 * 60, 2 * 60, 2 * 60, 1 * 60, 5 * 60, 2 * 60, 1 * 60, 1 * 60, 3 * 60, 1 * 60, 1 * 60 };
-        Ghosts = ghosts;
+        UpdateAllGhostMode(GlobalMode);
     }
+
+
 
     public void UpdateTimer()
     {
@@ -76,6 +84,9 @@ public class LevelTimer
             UpdateAllGhostMode(GlobalMode);
         return true;
     }
-
+    public void SetCurrentLevel(int Level)
+    {
+        this.CurrentLevel = Level;
+    }
 }
 
