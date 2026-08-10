@@ -440,7 +440,23 @@ namespace PacManGame
             Raylib.DrawText(line2, 10, hudY + 25, 20, Color.LightGray);
 
             string modeText = timer.GetCurrentMode().ToString();
-            string line3 = $"Ghost Mode: {modeText}  Time remaining: {timer.ModeTimer:F1}s";
+            float timeRemaining;
+
+            if (timer.GetCurrentMode() == ModeType.Fright)
+            {
+                timeRemaining = timer.FrightTimer / 60f;
+            }
+            else
+            {
+                int phaseIndex = timer.ModeTimerIndex;
+                int phaseLengthFrames = phaseIndex < timer.GlobalSchedule[timer.GetGlobalLevelIndex()].Length
+                    ? timer.GlobalSchedule[timer.GetGlobalLevelIndex()][phaseIndex]
+                    : 0;
+                int framesRemaining = phaseLengthFrames - timer.ModeTimer;
+                timeRemaining = framesRemaining > 0 ? framesRemaining / 60f : 0f;
+            }
+
+            string line3 = $"Ghost Mode: {modeText}  Time remaining: {timeRemaining:F1}s";
             Raylib.DrawText(line3, 10, hudY + 50, 20, Color.Orange);
 
             // Show ghost positions with their names

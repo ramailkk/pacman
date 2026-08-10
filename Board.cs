@@ -5,17 +5,19 @@ namespace PacManGame
 {
     public class Board
     {
-        private static readonly Dictionary<int, TileType> IntToTile = new(){
-            { 0, TileType.Empty },
-            { 1, TileType.Wall },
-            { 2, TileType.Dot },
-            { 3, TileType.PowerPellet },
-            { 4, TileType.Fruit },
-            { 5, TileType.GhostHouse },
-            { 6, TileType.DeadSpace },
-            { 7, TileType.Tunnel},
-            { 8, TileType.RedZone},
-            { 9, TileType.HouseGate}
+        private static readonly Dictionary<int, (TileType Type, bool IsRedZone)> IntToTile = new()
+        {
+            { 0, (TileType.Empty, false) },
+            { 1, (TileType.Wall, false) },
+            { 2, (TileType.Dot, false) },
+            { 3, (TileType.PowerPellet, false) },
+            { 4, (TileType.Fruit, false) },
+            { 5, (TileType.GhostHouse, false) },
+            { 6, (TileType.DeadSpace, false) },
+            { 7, (TileType.Tunnel, false) },
+            { 8, (TileType.Empty, true) },   // red zone, nothing in it — same code as before
+            { 9, (TileType.HouseGate, false) },
+            { 10, (TileType.Dot, true) },    // NEW — red zone with a dot in it
         };
 
         public int TileHeight { get; }
@@ -25,7 +27,6 @@ namespace PacManGame
         public int TotalEnergizers { get; private set; }
         public int TotalSmallDots { get; private set; }
         public int RemainingDots { get; private set; }
-        
         public Tile[,] Grid { get; private set; }
         public int[][] Reference;
         public int LEVEL;
@@ -59,8 +60,8 @@ namespace PacManGame
                 for (int j = 0; j < tiles.GetLength(1); j++)
                 {
                     int value = reference[i][j];
-                    TileType type = IntToTile[value];
-                    tiles[i, j] = new Tile(TileHeight, TileWidth, type);
+                    (TileType type, bool isRedZone) = IntToTile[value];
+                    tiles[i, j] = new Tile(TileHeight, TileWidth, type, isRedZone);
                     if (type == TileType.Dot)
                         TotalSmallDots++;
                     else if (type == TileType.PowerPellet)

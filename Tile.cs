@@ -18,12 +18,13 @@ namespace PacManGame
         public int TileHeight { get; set; }
         public int TileWidth { get; set; }
         public TileType Type { get; set; }
-
-        public Tile(int tileHeight, int tileWidth, TileType type)
+        public bool IsTileRedZone;
+        public Tile(int tileHeight, int tileWidth, TileType type, bool isRedZone)
         {
             TileHeight = tileHeight;
             TileWidth = tileWidth;
             Type = type;
+            IsTileRedZone = isRedZone;
         }
 
         public bool IsWalkable()
@@ -54,7 +55,7 @@ namespace PacManGame
         }
         public bool IsRedZone()
         {
-            return Type.Equals(TileType.RedZone);
+            return IsTileRedZone;
         }
         public bool IsTunnel()
         {

@@ -31,7 +31,7 @@ namespace PacManGame
                 new int[] { 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1 },
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
-                new int[] { 1, 3, 2, 2, 1, 1, 2, 2, 2, 2, 2, 8, 8, 8, 8, 8, 8, 2, 2, 2, 2, 2, 1, 1, 2, 2, 3, 1 },
+                new int[] { 1, 3, 2, 2, 1, 1, 2, 2, 2, 2, 2, 10, 10, 8, 8, 10, 10, 2, 2, 2, 2, 2, 1, 1, 2, 2, 3, 1 },
                 new int[] { 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1 },
                 new int[] { 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1 },
                 new int[] { 1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 1 },
@@ -62,7 +62,6 @@ namespace PacManGame
         public static readonly int[] FlashCount = { 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 3, 3, 5, 3, 5, 0, 3, 0, 0, 0 };
 
         //  Local Limit Counters -> Blinky is already outside and Pinky goes first
-
 
         public static readonly int[] InkyLocalDotLimit = { 30, 0, 0 };
         // just add the first Inkys entries to Clyde Local Dot entries to simplify logic
