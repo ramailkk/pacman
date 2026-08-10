@@ -43,7 +43,7 @@ public class LevelTimer
         return;
     }
 
-        if (ModeTimerIndex == GlobalSchedule.Length)
+        if (ModeTimerIndex == GlobalSchedule[0].Length)
             return;
 
         if (ModeTimer > GlobalSchedule[GetGlobalLevelIndex()][ModeTimerIndex])

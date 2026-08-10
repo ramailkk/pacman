@@ -12,7 +12,7 @@ namespace PacManGame
         public bool isActive;
         public Random random;
         public Board Board;
-        public Fruit(int tilePosX, int tilePosY, Board board )
+        public Fruit(int tilePosX, int tilePosY, Board board)
         {
             Board = board;
             (PixelPosX, PixelPosY) = ConvertTileToPixel(tilePosX, tilePosY);

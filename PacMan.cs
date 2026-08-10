@@ -13,10 +13,12 @@ namespace PacManGame
         public int EatenDotCounter;
         public int FreezeFramesRemaining;
         public bool HasDied;
+        public bool HasExtraLife;
         public PacMan(int x, int y, Board board, Fruit fruit) : base(x, y, board)
         {
             this.Initialize();
             Fruit = fruit;
+            HasExtraLife = false;
             LIVES = 3;
         }
 
@@ -189,6 +191,11 @@ namespace PacManGame
                     Fruit.SetInActive();
                     board.UpdateFruitScore();
                 }
+            }
+            if (board.Score >= 10000 && !HasExtraLife)
+            {
+                LIVES++;
+                HasExtraLife = true;
             }
         }
     }

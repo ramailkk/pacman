@@ -75,11 +75,11 @@ namespace PacManGame
                 if (fruit.IsActive())
                     DrawFruit(fruit);
                 // // Draw visualizations for all ghosts
-                foreach (var ghost in ghosts)
-                {
-                    DrawEuclideanPath(ghost);
-                    DrawScatterTarget(ghost);
-                }
+                // foreach (var ghost in ghosts)
+                // {
+                //     DrawEuclideanPath(ghost);
+                //     DrawScatterTarget(ghost);
+                // }
 
                 DrawPacMan(pacman);
 

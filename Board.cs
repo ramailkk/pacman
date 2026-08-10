@@ -95,6 +95,5 @@ namespace PacManGame
             Grid = SetupBoard(Reference);
             LEVEL++;
         }
-        
     }
 }
