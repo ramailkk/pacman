@@ -90,9 +90,9 @@ namespace PacManGame
             (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
             // check Speed first
             CheckSpeedForGhost(TileX, TileY);
-            if (!CanMoveThisTick())
-                return;
-
+            int moveCount = GetStepsThisTick();
+            for (int i = 0; i < moveCount; i++)
+            {
             // Deal with anything related to Home States First
             if (HouseState.Equals(GhostHouseState.Home))
             {
@@ -200,6 +200,8 @@ namespace PacManGame
             // Safety net: never step with an unresolved/dead-end direction
             if (!direction.Equals(Vector2D.Zero))
                 (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
+            }
+            
         }
 
         public bool IsAtStartingPositions(Vector2D direction)
@@ -215,7 +217,7 @@ namespace PacManGame
             int Level = board.LEVEL;
             Tile currentTile = board.Grid[tileY, tileX];
             if (this.CurrentMode.Equals(ModeType.Dead))
-                speed = 100;
+                speed = 350;
             if (currentTile.IsTunnel())
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostTunnelSpeed);
             else if (CurrentMode.Equals(ModeType.Fright))

@@ -18,11 +18,9 @@ namespace PacManGame
         public int speed;
         public Vector2D direction;
         protected Board board;
-
         public int accumulator;
-
-        int TilePosX;
-        int TilePosY;
+        private readonly int TilePosX;
+        private readonly int TilePosY;
         public Actor(int tilePosX, int tilePosY, Board board)
         {
             this.board = board;
@@ -33,18 +31,15 @@ namespace PacManGame
         public virtual void Initialize()
         {
             (PixelPosX, PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
-            PixelPosX = PixelPosX + board.TileWidth / 2;
+            PixelPosX += (board.TileWidth / 2);
         }
 
-        public bool CanMoveThisTick()
+        public int GetStepsThisTick()
         {
             accumulator += speed;
-            if (accumulator >= 100)
-            {
-                accumulator -= 100;
-                return true;
-            }
-            return false;
+            int steps = accumulator / 100;
+            accumulator -= steps * 100;
+            return steps;
         }
 
         public bool IsCollisionWithActor(Actor other)
@@ -113,7 +108,7 @@ namespace PacManGame
         public (int pixelPosX, int pixelPosY) GetStartCords()
         {
             (int pixelPosX, int pixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
-            pixelPosX = pixelPosX + board.TileWidth / 2;
+            pixelPosX += (board.TileWidth / 2);
             return (pixelPosX, pixelPosY);
         }
         public virtual void ChangeDirection(Vector2D direction)

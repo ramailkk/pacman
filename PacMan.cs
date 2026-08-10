@@ -38,8 +38,9 @@ namespace PacManGame
         }
         public void Move()
         {
-            if (!this.CanMoveThisTick())
-                return;
+            int moveCount = GetStepsThisTick();
+            for (int i = 0; i < moveCount; i++)
+            {
             if (FreezeFramesRemaining > 0)
             {
                 FreezeFramesRemaining--;
@@ -59,6 +60,7 @@ namespace PacManGame
                     PixelPosY = newPixelY;
                 else
                     PixelPosX = newPixelX;
+                }
             }
         }
         public void CheckFreezeFrames()
