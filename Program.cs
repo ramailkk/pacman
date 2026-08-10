@@ -295,10 +295,6 @@ namespace PacManGame
             float baseRadius = TileSize * DrawScale * 0.45f;
             float overlapRadius = baseRadius * 1.6f; // Overlap neighboring tiles
 
-            // Draw glow/aura effect
-            Color glowColor = new Color(255, 255, 0, 60);
-            Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius * 1.2f, glowColor);
-
             // Draw main body
             Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius, Color.Yellow);
 
@@ -372,10 +368,6 @@ namespace PacManGame
                         _ => Color.Red
                     };
                 }
-
-                // Draw glow effect
-                Color glowColor = Color.Gold;
-                Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius * 1.3f, glowColor);
 
                 // Ghost body - circular
                 Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius, ghostColor);
