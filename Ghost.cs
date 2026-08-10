@@ -285,7 +285,7 @@ namespace PacManGame
         {
             // if not found at random first then go clockwise
             var directions = new Vector2D[] { Vector2D.Up, Vector2D.Right, Vector2D.Down, Vector2D.Left };
-            var randomDirection = directions[Random.Shared.Next(directions.Length)];
+            var randomDirection = directions[board.rng.Next(directions.Length)];
             if (!IsValidTile(tileX, tileY, randomDirection) || randomDirection.Equals(direction.Reverse()))
             {
                 foreach (var dir in directions)

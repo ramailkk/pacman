@@ -19,6 +19,7 @@ namespace PacManGame
         public Vector2D direction;
         protected Board board;
         public int accumulator;
+        
         private readonly int TilePosX;
         private readonly int TilePosY;
         public Actor(int tilePosX, int tilePosY, Board board)

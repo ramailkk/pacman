@@ -30,12 +30,13 @@ namespace PacManGame
         public int[][] Reference;
         public int LEVEL;
 
+        public Random rng;
+        private const int Seed = 12345;
         public Board(int[][] reference, int tileWidth, int tileHeight)
         {
             TileHeight = tileHeight;
             TileWidth = tileWidth;
             Reference = reference;
-
             Score = 0;
             TotalSmallDots = 0;
             TotalEnergizers = 0;
@@ -66,6 +67,7 @@ namespace PacManGame
                         TotalEnergizers++;
                 }
             }
+            rng = new Random(Seed);
             TotalDots = TotalSmallDots + TotalEnergizers;
             RemainingDots = TotalDots;
             return tiles;
