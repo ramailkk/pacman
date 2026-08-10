@@ -141,7 +141,7 @@ namespace PacManGame
         public void CheckSpeed()
         {
             int Level = board.LEVEL;
-            if (timer.isFrightMode())
+            if (timer.IsFrightMode())
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightPacManSpeed);
             else
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.PacManSpeed);

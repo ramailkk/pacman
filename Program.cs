@@ -34,8 +34,7 @@ namespace PacManGame
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
             timer.SetCurrentLevel(board1.LEVEL);
-            Console.WriteLine(board1.Grid.GetLength(0));
-            Console.WriteLine(board1.Grid.GetLength(1));
+            Console.WriteLine(timer.FrightSchedule[0]);
 
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
@@ -425,7 +424,7 @@ namespace PacManGame
         {
             int hudY = board.Grid.GetLength(0) * TileSize * (int)DrawScale + 5;
 
-            string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.RemainingDots}  B speed: {ghosts[0].speed}";
+            string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.RemainingDots}  FPS: {Raylib.GetFPS()}";
             Raylib.DrawText(line1, 10, hudY, 20, Color.White);
 
             (int tileX, int tileY) = pacman.ConvertPixelToTile(pacman.PixelPosX, pacman.PixelPosY);

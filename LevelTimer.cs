@@ -20,7 +20,7 @@ public class LevelTimer
             [7 * 60, 20 * 60, 7 * 60, 20 * 60, 5 * 60, 1033 * 60, 1],    //Level 2-4
             [5 * 60, 20 * 60, 5 * 60, 20 * 60, 5 * 60, 1037 * 60, 1]     //Level 5+
         ];
-        FrightSchedule = new int[] { 5 * 60, 5 * 60, 4 * 60, 3 * 60, 2 * 60, 5 * 60, 2 * 60, 2 * 60, 1 * 60, 5 * 60, 2 * 60, 1 * 60, 1 * 60, 3 * 60, 1 * 60, 1 * 60 };
+        FrightSchedule = new int[] { 6 * 60, 5 * 60, 4 * 60, 3 * 60, 2 * 60, 5 * 60, 2 * 60, 2 * 60, 1 * 60, 5 * 60, 2 * 60, 1 * 60, 1 * 60, 3 * 60, 1 * 60, 1 * 60 };
     }
 
     public void Initialize()
@@ -35,8 +35,13 @@ public class LevelTimer
 
     public void UpdateTimer()
     {
-        if (isFrightMode())
-            return;
+         if (FrightTimer > 0)
+    {
+        FrightTimer--;
+        if (FrightTimer == 0)
+            UpdateAllGhostMode(GlobalMode);
+        return;
+    }
 
         if (ModeTimerIndex == GlobalSchedule.Length)
             return;
@@ -61,7 +66,7 @@ public class LevelTimer
     }
     public int GetFrightLevelIndex()
     {
-        return CurrentLevel >= 21 ? FrightSchedule.Length - 1 : CurrentLevel;
+        return CurrentLevel >= 21 ? FrightSchedule.Length - 1 : CurrentLevel - 1;
     }
     public ModeType GetCurrentMode()
     {
@@ -75,14 +80,9 @@ public class LevelTimer
                 ghost.UpdateMode(Mode);
         }
     }
-    public bool isFrightMode()
+    public bool IsFrightMode()
     {
-        if (FrightTimer == 0)
-            return false;
-        FrightTimer--;
-        if (FrightTimer == 0)
-            UpdateAllGhostMode(GlobalMode);
-        return true;
+        return FrightTimer > 0; 
     }
     public void SetCurrentLevel(int Level)
     {
