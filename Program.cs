@@ -20,10 +20,11 @@ namespace PacManGame
 
         static void Main(string[] args)
         {
-            
+
             int[][] board = LevelSpecs.board;
             Board board1 = new(board, TileSize, TileSize);
-            PacMan pacman = new PacMan(13, 26, board1);
+            Fruit fruit = new Fruit(13, 26, board1);
+            PacMan pacman = new PacMan(13, 26, board1, fruit);
             Ghost blinky = new Ghost(13, 14, board1, 26, 0, pacman, GhostType.Blinky);
             Ghost pinky = new Ghost(13, 17, board1, 3, 0, pacman, GhostType.Pinky);
             Ghost inky = new Ghost(11, 17, board1, 28, 35, pacman, GhostType.Inky);
@@ -34,7 +35,6 @@ namespace PacManGame
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
             timer.SetCurrentLevel(board1.LEVEL);
-            Console.WriteLine(timer.FrightSchedule[0]);
 
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
@@ -54,6 +54,8 @@ namespace PacManGame
                 if (!isPaused)
                 {
                     HandleInput(pacman);
+
+
                     pacman.UpdateLoop();
 
                     // Update all ghosts
@@ -70,7 +72,8 @@ namespace PacManGame
                 Raylib.ClearBackground(Color.Black);
 
                 DrawBoard(board1);
-
+                if (fruit.IsActive())
+                    DrawFruit(fruit);
                 // // Draw visualizations for all ghosts
                 foreach (var ghost in ghosts)
                 {
@@ -131,9 +134,6 @@ namespace PacManGame
                             break;
                         case TileType.PowerPellet:
                             Raylib.DrawCircle((int)(x + size / 2), (int)(y + size / 2), size * 0.25f, Color.Beige);
-                            break;
-                        case TileType.Fruit:
-                            Raylib.DrawCircle((int)(x + size / 2), (int)(y + size / 2), size * 0.3f, Color.Red);
                             break;
                         case TileType.GhostHouse:
                             Raylib.DrawRectangle((int)x, (int)y, (int)size, (int)size, new Color(30, 30, 30, 255));
@@ -288,7 +288,15 @@ namespace PacManGame
                 new Color(255, 182, 193, 200)
             );
         }
+        
+        static void DrawFruit(Fruit fruit)
+        {
+            float screenX = fruit.PixelPosX * DrawScale;
+            float screenY = fruit.PixelPosY * DrawScale;
+            float size = TileSize * DrawScale;
+            Raylib.DrawCircle((int)screenX, (int)screenY, size * 0.25f , Color.Red);
 
+        }
         static void DrawPacMan(PacMan pacman)
         {
             float screenX = pacman.PixelPosX * DrawScale;

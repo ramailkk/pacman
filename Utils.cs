@@ -2,6 +2,7 @@ namespace PacManGame
 {
     public static class Utils
     {
+
         public static int ManhattanDistanceBetweenTiles(int TileX, int TileY, int targetTileX, int targetTileY)
         {
             return (int)(Math.Abs(TileX - targetTileX) + Math.Abs(TileY - targetTileY));

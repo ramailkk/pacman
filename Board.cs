@@ -30,7 +30,6 @@ namespace PacManGame
         public Tile[,] Grid { get; private set; }
         public int[][] Reference;
         public int LEVEL;
-
         public Random rng;
         private const int Seed = 12345;
         public Board(int[][] reference, int tileWidth, int tileHeight)
@@ -43,7 +42,6 @@ namespace PacManGame
             TotalEnergizers = 0;
             TotalDots = 0;
             RemainingDots = 0;
-
             Grid = SetupBoard(reference);
             LEVEL = 1;
         }
@@ -83,6 +81,10 @@ namespace PacManGame
             Score += 50;
             RemainingDots--;
         }
+        public void UpdateFruitScore()
+        {
+            Score += LevelSpecs.GetEntry(LEVEL, LevelSpecs.BonusPoints);
+        }
         public void SetupNextLevel()
         {
             Score = 0;
@@ -93,5 +95,6 @@ namespace PacManGame
             Grid = SetupBoard(Reference);
             LEVEL++;
         }
+        
     }
 }

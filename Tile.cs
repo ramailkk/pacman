@@ -19,6 +19,7 @@ namespace PacManGame
         public int TileWidth { get; set; }
         public TileType Type { get; set; }
         public bool IsTileRedZone;
+        public bool hasFruit;
         public Tile(int tileHeight, int tileWidth, TileType type, bool isRedZone)
         {
             TileHeight = tileHeight;
@@ -60,6 +61,14 @@ namespace PacManGame
         public bool IsTunnel()
         {
             return Type.Equals(TileType.Tunnel);
+        }
+        public void SetFruit(bool hasFruit)
+        {
+            this.hasFruit = hasFruit;
+        }
+        public bool HasFruit()
+        {
+            return this.hasFruit;
         }
     }
 }

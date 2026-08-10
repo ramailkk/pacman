@@ -9,12 +9,14 @@ namespace PacManGame
         public Vector2D bufferDirection;
         public List<Ghost> ghosts;
         public LevelTimer timer;
+        public Fruit Fruit;
         public int EatenDotCounter;
         public int FreezeFramesRemaining;
         public bool HasDied;
-        public PacMan(int x, int y, Board board) : base(x, y, board)
+        public PacMan(int x, int y, Board board, Fruit fruit) : base(x, y, board)
         {
             this.Initialize();
+            Fruit = fruit;
             LIVES = 3;
         }
 
@@ -30,6 +32,7 @@ namespace PacManGame
 
         public void UpdateLoop()
         {
+            Fruit.Update();
             CheckSpeed();
             Move();
             CheckConsumables();
@@ -114,6 +117,7 @@ namespace PacManGame
                     {
                         LIVES--;
                         HasDied = true;
+                        Fruit.SetInActive();
                         ResetGame();
                     }
                 }
@@ -176,6 +180,15 @@ namespace PacManGame
                 // Reseting for Next Level here
                 if (board.RemainingDots == 0)
                     ResetForNextLevel();
+            }
+            else if (Fruit.IsActive())
+            {
+                int pixelDistX =  Math.Abs(this.PixelPosX - Fruit.PixelPosX);
+                if (pixelDistX <= board.TileWidth / 2 && PixelPosY == Fruit.PixelPosY)
+                {
+                    Fruit.SetInActive();
+                    board.UpdateFruitScore();
+                }
             }
         }
     }

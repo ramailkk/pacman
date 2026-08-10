@@ -2,7 +2,6 @@ namespace PacManGame
 {
     public static class LevelSpecs
     {
-        public const int BaseSpeedPxPerSec = 76; // 75.75757625 rounded — 100% speed reference
         public static readonly int[][] board =
             [
                 new int[] { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 },
@@ -16,7 +15,7 @@ namespace PacManGame
                 new int[] { 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1 },
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
                 new int[] { 1, 2, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1 },
-                new int[] { 1, 2, 2, 2, 2, 2, 2, 1, 1, 4, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 1 },
+                new int[] { 1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 1 },
                 new int[] { 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
                 new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
                 new int[] { 6, 6, 6, 6, 6, 1, 2, 1, 1, 0, 0, 0, 8, 8, 8, 8, 0, 0, 0, 1, 1, 2, 1, 6, 6, 6, 6, 6 },
@@ -66,6 +65,24 @@ namespace PacManGame
         public static readonly int[] InkyLocalDotLimit = { 30, 0, 0 };
         // just add the first Inkys entries to Clyde Local Dot entries to simplify logic
         public static readonly int[] ClydeLocalDotLimit = { 90, 50, 0 };
+
+        // For Fruits
+        public static readonly FruitType[] BonusFruit =
+        {   FruitType.Cherries,   // level 1
+            FruitType.Strawberry, // level 2
+            FruitType.Peach,      // level 3
+            FruitType.Peach,      // level 4
+            FruitType.Apple,      // level 5
+            FruitType.Apple,      // level 6
+            FruitType.Grapes,     // level 7
+            FruitType.Grapes,     // level 8
+            FruitType.Galaxian,   // level 9
+            FruitType.Galaxian,   // level 10
+            FruitType.Bell,       // level 11
+            FruitType.Bell,       // level 12
+            FruitType.Key,        // level 13
+        };
+        public static readonly int[] BonusPoints ={ 100, 300, 500, 500, 700, 700, 1000, 1000, 2000, 2000,3000, 3000, 5000};
         public static int GetEntry(int Level, int[] array)
         {
             Level = Math.Min(Level, array.Length) - 1;
