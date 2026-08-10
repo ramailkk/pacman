@@ -112,7 +112,7 @@ namespace PacManGame
                         board.Score += 200 * MULT;
                         MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
                     }
-                    else if (!ghost.CurrentMode.Equals(ModeType.Fright) && ghost.CurrentMode.Equals(GhostHouseState.Normal))
+                    else if (ghost.CurrentMode.Equals(ModeType.Fright) && ghost.CurrentMode.Equals(GhostHouseState.Normal))
                     {
                         LIVES--;
                         // Apply some logic about restarting the game

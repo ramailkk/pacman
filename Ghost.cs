@@ -168,10 +168,11 @@ namespace PacManGame
                             hasEnteredDoor = false;
                             hasAlignedToDoor = false;
                             CurrentMode = PacMan.timer.GetCurrentMode();
-                            if (this.ghostType.Equals(Blinky))
+                            if (this.ghostType.Equals(GhostType.Blinky))
                                 HouseState = GhostHouseState.Leave;
                             else
                                 HouseState = GhostHouseState.Home;
+                            this.CurrentMode = PacMan.timer.GlobalMode;
                             return;
                         }
                     }
@@ -201,11 +202,12 @@ namespace PacManGame
             if (!direction.Equals(Vector2D.Zero))
                 (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
             }
-            
         }
 
         public bool IsAtStartingPositions(Vector2D direction)
         {
+            if (ghostType.Equals(GhostType.Blinky))
+                return true;
             if ((PixelPosX, PixelPosY) == GetStartCords())
                 return true;
             (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
