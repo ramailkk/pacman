@@ -54,18 +54,20 @@ namespace PacManGame
                 if (!isPaused)
                 {
                     HandleInput(pacman);
-
-
                     pacman.UpdateLoop();
-
-                    // Update all ghosts
                     foreach (var ghost in ghosts)
                     {
                         ghost.Move();
                     }
 
                     pacman.CheckGhostCollisions();
+                    if (pacman.IsGameOver())
+                    {
+                        // this is where where we'll end the game
+                        return;
+                    }
                     timer.UpdateTimer();
+
                 }
 
                 Raylib.BeginDrawing();

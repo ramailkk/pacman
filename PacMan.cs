@@ -198,5 +198,9 @@ namespace PacManGame
                 HasExtraLife = true;
             }
         }
+        public bool IsGameOver()
+        {
+            return LIVES == 0;
+        }
     }
 }
