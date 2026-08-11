@@ -140,6 +140,7 @@ namespace PacManGame
         {
             HasDied = false;
             EatenDotCounter = 0;
+            Fruit.ResetForNextLevel();
             board.SetupNextLevel();
             timer.CurrentLevel++;
             ResetGame();

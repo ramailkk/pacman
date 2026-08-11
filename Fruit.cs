@@ -12,6 +12,8 @@ namespace PacManGame
         public bool isActive;
         public Random random;
         public Board Board;
+        public bool hasShown1;
+        public bool hasShown2;
         public Fruit(int tilePosX, int tilePosY, Board board)
         {
             Board = board;
@@ -26,10 +28,16 @@ namespace PacManGame
         {
             if (!isActive)
             {
-                if (Board.TotalDots - Board.RemainingDots == 70)
+                if (Board.TotalDots - Board.RemainingDots == 70 && !hasShown1)
+                {
+                    hasShown1 = true;
                     SetActive();
-                else if (Board.TotalDots - Board.RemainingDots == 170)
+                }
+                else if (Board.TotalDots - Board.RemainingDots == 170 && !hasShown2)
+                {
+                    hasShown2 = true;
                     SetActive();
+                }
             }
             else
             {
@@ -38,6 +46,13 @@ namespace PacManGame
                 else
                     SetInActive();
             }
+        }
+        public void ResetForNextLevel()
+        {
+            SetInActive();
+            FruitTimer = 0;
+            hasShown1 = false;
+            hasShown2 = false;
         }
         public bool IsActive()
         {

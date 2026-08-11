@@ -234,7 +234,7 @@ namespace PacManGame
             Tile currentTile = board.Grid[tileY, tileX];
             if (this.CurrentMode.Equals(ModeType.Dead))
                 speed = 350;
-            if (currentTile.IsTunnel())
+            else if (currentTile.IsTunnel())
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostTunnelSpeed);
             else if (CurrentMode.Equals(ModeType.Fright))
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightGhostSpeed);
