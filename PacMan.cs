@@ -6,6 +6,7 @@ namespace PacManGame
     {
         public int LIVES;
         public int MULT;
+        public int EatenGhostsCounter;
         public Vector2D bufferDirection;
         public List<Ghost> ghosts;
         public LevelTimer timer;
@@ -111,10 +112,12 @@ namespace PacManGame
                 {
                     if (ghost.CurrentMode.Equals(ModeType.Fright))
                     {
+                        ghost.HasDied = true;
                         ghost.UpdateMode(ModeType.Dead);
                         ghost.UpdateGhostHouseState(GhostHouseState.Enter);
-                        board.Score += 200 * MULT;
-                        MULT *= 2; //Reset this back to 1 when Fright is Intiaited 
+                        board.Score += 200 * (int)Math.Pow(2, MULT);
+                        MULT++; //Reset this back to 1 when Fright is Intiaited 
+                        EatenGhostsCounter++;
                     }
                     else if (!ghost.CurrentMode.Equals(ModeType.Fright) && !ghost.CurrentMode.Equals(ModeType.Dead))
                     {
@@ -162,6 +165,7 @@ namespace PacManGame
                 tile.RemoveDotOrPellet();
                 FreezeFramesRemaining = 3;
                 EatenDotCounter++;
+                EatenGhostsCounter = 0;
                 MULT = 1;
                 timer.InitiateFrightTimer();
                 foreach (var ghost in ghosts)
@@ -197,6 +201,15 @@ namespace PacManGame
                 LIVES++;
                 HasExtraLife = true;
             }
+        }
+        public bool IsGhostDead()
+        {
+            foreach(var ghost in ghosts)
+            {
+                if (ghost.HasDied)
+                    return true;
+            }
+            return false;
         }
         public bool IsGameOver()
         {

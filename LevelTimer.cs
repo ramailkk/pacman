@@ -37,8 +37,10 @@ public class LevelTimer
 
 
 
-    public void UpdateTimer()
+    public void UpdateTimer(bool isFrozen)
     {
+        if (isFrozen)
+            return;
      if (FrightTimer > 0)
     {
         int flashCount = LevelSpecs.GetEntry(CurrentLevel, LevelSpecs.FlashCount);

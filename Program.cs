@@ -15,12 +15,16 @@ namespace PacManGame
 
         static int PacManAnimFrameIndex;
         static int GhostAnimFrameIndex;
-        static bool playDeathAnim;    
+        static bool playDeathAnim;
+        static int gameStartTimer;
+
+
+        static int ghostEatenTimer;
+        static int PacManDeathTimer;
 
         static int PacManAnimSwitcher;
         static int GhostAnimTimer;
         static int PelletAnimTimer;
-        static int FruitPointsTimer;
         
         static Texture2D emptyBoardSheet;
         static Texture2D fullBoardSheet;
@@ -45,7 +49,9 @@ namespace PacManGame
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
             timer.SetCurrentLevel(board1.LEVEL);
-
+            ghostEatenTimer = 60;
+            PacManDeathTimer = 60;
+            gameStartTimer = 120;
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
 
@@ -64,31 +70,56 @@ namespace PacManGame
                     isPaused = !isPaused;
 
                 if (!isPaused)
-                {
-                    if (ResetGame)
                     {
-                        ResetGame = false;
-                        GameReset(pacman);
+                        if (ResetGame)
+                        {
+                            ResetGame = false;
+                            GameReset(pacman);
+                        }
+                        bool anyGhostEaten = ghosts.Any(g => g.HasDied);
+
+                        if (gameStartTimer > 0)
+                            gameStartTimer--;
+
+                        if (anyGhostEaten)
+                        {
+                            if (ghostEatenTimer == 0)
+                            {
+                                ghostEatenTimer = 60;
+                                foreach (var g in ghosts)
+                                    g.HasDied = false;
+                                anyGhostEaten = false;   // pause is over as of this frame
+                            }
+                            else
+                            {
+                                ghostEatenTimer--;
+                            }
+                        }
+
+                        isFrozen = gameStartTimer > 0 || playDeathAnim || anyGhostEaten;
+
+                        // 2. Everyone uses that same, already-final isFrozen value.
+                        CanChangeAnimation();
+                        HandleInput(pacman);
+                        pacman.UpdateLoop(isFrozen);
+
+                        if (pacman.HasDied)
+                        {
+                            PacManAnimFrameIndex = 0;
+                            playDeathAnim = true;
+                            pacman.HasDied = false;
+                        }
+                        if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
+                            PacManAnimFrameIndex = 1;
+
+                        foreach (var ghost in ghosts)
+                            ghost.Move(isFrozen);
+
+                        if (!playDeathAnim)
+                            pacman.CheckGhostCollisions();
+
+                        timer.UpdateTimer(isFrozen);
                     }
-                    CanChangeAnimation();
-                    HandleInput(pacman);
-                    pacman.UpdateLoop(isFrozen);
-                       if (pacman.HasDied){
-                        PacManAnimFrameIndex = 0;
-                        playDeathAnim = true;
-                        isFrozen = true;
-                        pacman.HasDied = false;
-                    }
-                    if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
-                        PacManAnimFrameIndex = 1;
-                    foreach (var ghost in ghosts)
-                    {
-                        ghost.Move(isFrozen);
-                    }
-                    if (!playDeathAnim)
-                        pacman.CheckGhostCollisions();
-                    timer.UpdateTimer();
-                }
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
@@ -99,7 +130,7 @@ namespace PacManGame
                 DrawPacMan(pacman);
                 if (isPaused)
                     DrawPauseOverlay();
-
+                DrawHud(board1,pacman,ghosts,timer);
                 Raylib.EndDrawing();
             }
 
@@ -191,7 +222,9 @@ namespace PacManGame
             float screenY = pacman.PixelPosY * DrawScale;
             float size = TileSize * DrawScale * 2.0f;
             Rectangle src;
-            if (!playDeathAnim)
+            if (pacman.IsGhostDead())
+                src = new Rectangle(0, 0, 0, 0);
+            else if (!playDeathAnim)
                 src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
             else
                 src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
@@ -207,7 +240,9 @@ namespace PacManGame
                 float screenY = ghost.PixelPosY * DrawScale;
                 float size = TileSize * DrawScale * 2.0f; 
                 Rectangle src;
-                if (ghost.CurrentMode.Equals(ModeType.Dead))
+                if (ghost.HasDied)
+                    src = Sprites.GhostPointsSelector(ghost.PacMan.EatenGhostsCounter);
+                else if (ghost.CurrentMode.Equals(ModeType.Dead))
                     src = Sprites.GhostDeadSelector(ghost.direction);
                 else if (ghost.CurrentMode.Equals(ModeType.Fright))
                     src = Sprites.GhostFrightSelector(ghost.PacMan.timer.isBlue)[GhostAnimFrameIndex];
@@ -275,9 +310,10 @@ namespace PacManGame
         }
         public static void CanChangeAnimation()
         {
-
+            if (isFrozen && !playDeathAnim)
+                return;
             if (!playDeathAnim)
-                IncrementPacManTimers(Sprites.PacmanDirectionList[0].Count, 1);
+                IncrementPacManTimers(Sprites.PacmanDirectionList[0].Count, 2);
             else
                 IncrementPacManTimers(Sprites.PacManDead.Count, 10);
             IncrementGhostTimer(Sprites.BlinkyDirectionList[0].Count, 3);
@@ -292,6 +328,7 @@ namespace PacManGame
             playDeathAnim = false;
             isFrozen = false;
             PacManAnimFrameIndex = Sprites.PacmanDirectionList[0].Count - 1;
+            gameStartTimer = 120;
             pacMan.ResetGame();
         }
 

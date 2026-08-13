@@ -47,7 +47,7 @@ namespace PacManGame
         // ghostType usages
         public GhostType ghostType;
         public Ghost Blinky;
-
+        public bool HasDied;
 
         // movement flags
         public bool hasAlignedToDoor;
