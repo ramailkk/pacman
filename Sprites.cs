@@ -23,7 +23,7 @@ static class Sprites
     public static Dictionary<FruitType, Rectangle> FruitToRect;
     public static Dictionary<FruitType, Rectangle> FruitToPointsRect;
     public static List<Rectangle> PacManDead;
-
+    public static Rectangle PacManLife;
 
     // ... etc for eyes, fruit, etc.
 
@@ -167,6 +167,9 @@ static class Sprites
         {
             PacManDead.Add(new Rectangle(startDeadX + offsetX * i, startDeadY,             offsetX, offsetY));
         }
+    
+        PacManLife = new Rectangle(146,16,offsetX, offsetY);        
+        
         (int startGhostPointsX, int startGhostPointsY) = (0, 128);
         GhostPoints = new List<Rectangle>();
         for (int i = 0; i< 4; i++)
@@ -187,6 +190,11 @@ static class Sprites
         public static Rectangle GhostPointsSelector(int EatenGhostsCounter) { 
             return GhostPoints[EatenGhostsCounter-1]; 
             }
+
+        public static Rectangle GetPacManLife()
+        {
+            return PacManLife;
+        }
         public static List<Rectangle> GhostTypeAndDirectionSelector(GhostType ghostType, Vector2D direction)
         {
             List<List<Rectangle>> DirectionList;

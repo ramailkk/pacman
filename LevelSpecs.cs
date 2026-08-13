@@ -81,6 +81,14 @@ namespace PacManGame
             FruitType.Bell,       // level 11
             FruitType.Bell,       // level 12
             FruitType.Key,        // level 13
+            FruitType.Key,        // level 14
+            FruitType.Key,        // level 15
+            FruitType.Key,        // level 16
+            FruitType.Key,        // level 17
+            FruitType.Key,        // level 18
+            FruitType.Key,        // level 19
+            FruitType.Key,        // level 20
+            FruitType.Key,        // level 21+
         };
         public static readonly int[] BonusPoints ={ 100, 300, 500, 500, 700, 700, 1000, 1000, 2000, 2000,3000, 3000, 5000};
         public static int GetEntry(int Level, int[] array)

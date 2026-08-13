@@ -1,11 +1,9 @@
-using System.Collections.Generic;
-
 namespace PacManGame
 {
     static class ScreenMessages
     {
         // Builds a (col,row) -> char map for a horizontal string starting at (startCol, startRow), one character per column.
-        private static Dictionary<(int col, int row), char> BuildMessage(string text, int startCol, int startRow)
+        public static Dictionary<(int col, int row), char> BuildMessage(string text, int startCol, int startRow)
         {
             var map = new Dictionary<(int col, int row), char>();
             for (int i = 0; i < text.Length; i++)
@@ -51,5 +49,15 @@ namespace PacManGame
             BuildMessage("CREDIT", 0, 35);
         public static readonly Dictionary<(int col, int row), char> ScoreLabel =
             BuildMessage("SCORE", 3, 1);
+    
+        public static Dictionary<(int col, int row), char> GetScore(int score, int col, int row)
+        {
+            String scoreString = score.ToString();
+            if (scoreString.Length > Math.Abs(col - 28))
+            {
+                col = 28 - scoreString.Length;
+            }
+            return BuildMessage(scoreString, col, row);   
+        }
     }
 }
