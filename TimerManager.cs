@@ -16,7 +16,8 @@ namespace PacManGame
         
         // Level/Gameplay timers
         LevelStart,         // Level start delay
-        GameOver
+        GameOver,
+        LevelEnd
     }
 
     public static class TimerManager
@@ -35,7 +36,8 @@ namespace PacManGame
             { TimerType.GhostEaten, 60 },      
             { TimerType.PacManAnim, 3 },       
             { TimerType.GhostAnim, 3 },        
-            { TimerType.PelletAnim, 60 },    
+            { TimerType.PelletAnim, 60 }, 
+            { TimerType.LevelEnd , 120},   
             { TimerType.LevelStart, 300 },
             { TimerType.GameOver, 300 },      
         };
@@ -52,7 +54,7 @@ namespace PacManGame
             Pause(TimerType.PacManDeath);
             Pause(TimerType.LevelStart);
             Pause(TimerType.GameOver);
-            
+            Pause(TimerType.LevelEnd);
             // Animation timers should loop, not auto-pause
             autoPause.Remove(TimerType.PacManAnim);
             autoPause.Remove(TimerType.GhostAnim);

@@ -19,7 +19,7 @@ namespace PacManGame
         static Texture2D fullBoardSheet;
         static Texture2D spriteSheet;
         static Texture2D textSheet;
-
+        static Texture2D whiteSheet;
         static void Main(string[] args)
         {
 
@@ -53,7 +53,7 @@ namespace PacManGame
             emptyBoardSheet = Raylib.LoadTexture("assets/empty_board.png");
             fullBoardSheet = Raylib.LoadTexture("assets/full_board.png");
             textSheet = Raylib.LoadTexture("assets/text.png");
-
+            whiteSheet = Raylib.LoadTexture("assets/white_board.png");
             Raylib.SetTargetFPS(60);
 
             while (!Raylib.WindowShouldClose())
@@ -81,7 +81,12 @@ namespace PacManGame
                             }
             
                         }
-                        isFrozen = TimerManager.IsRunning(TimerType.GameStart)  || TimerManager.IsRunning(TimerType.StartTimer) || playDeathAnim || anyGhostEaten || pacman.HasDied || !TimerManager.IsPaused(TimerType.LevelStart) || !TimerManager.IsPaused(TimerType.GameOver);
+                        isFrozen = TimerManager.IsRunning(TimerType.GameStart)  
+                        || TimerManager.IsRunning(TimerType.StartTimer) 
+                        || playDeathAnim || anyGhostEaten || pacman.HasDied 
+                        || !TimerManager.IsPaused(TimerType.LevelStart) 
+                        || !TimerManager.IsPaused(TimerType.GameOver) 
+                        ||!TimerManager.IsPaused(TimerType.LevelEnd);
 
                         // 2. Everyone uses that same, already-final isFrozen value.
                         CanChangeAnimation();
@@ -89,12 +94,18 @@ namespace PacManGame
                         pacman.UpdateLoop(isFrozen);
                         if (board1.RemainingDots == 0)
                         {   PacManAnimFrameIndex = 2;
-                            TimerManager.Resume(TimerType.LevelStart);
+                            TimerManager.Resume(TimerType.LevelEnd);
+                            if (TimerManager.IsDone(TimerType.LevelEnd))
+                            {
+                                TimerManager.PauseAndReset(TimerType.LevelEnd);
+                                TimerManager.Resume(TimerType.LevelStart);
                             if (TimerManager.IsDone(TimerType.LevelStart))
                             {
-                                TimerManager.PauseAndReset(TimerType.LevelStart);
                                 pacman.ResetForNextLevel();
+                                TimerManager.PauseAndReset(TimerType.LevelStart);
                                 TimerManager.ResumeAndReset(TimerType.GameStart);
+                            }
+                                
                             }
                         }
                         if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
@@ -176,28 +187,41 @@ namespace PacManGame
         }
 
         static void DrawBoard(Board board)
-        {
-            for (int row = 3; row < board.Grid.GetLength(0)-2; row++)
             {
-                for (int col = 0; col < board.Grid.GetLength(1); col++)
-                {
-                    Tile tile = board.Grid[row, col];
-                    float x = col * TileSize * DrawScale;
-                    float y = row * TileSize * DrawScale;
-                    float size = TileSize * DrawScale;
-                    Rectangle src = new Rectangle(col*board.TileHeight, (row-3)*board.TileWidth, board.TileWidth, board.TileHeight);
-                    Rectangle dest = new Rectangle(x, y, size, size);
-                    Vector2 origin = Vector2.Zero;
+                bool levelStartActive = !TimerManager.IsPaused(TimerType.LevelStart);
+                int levelStartValue = TimerManager.GetValue(TimerType.LevelStart);
 
-                    if (tile.HasDot())
-                        Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
-                    else if (tile.HasPowerPellet() && TimerManager.IsRunning(TimerType.PelletAnim))
-                        Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
-                    else
-                        Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
+                const int flashInterval = 15;
+                bool showWhite = (levelStartValue / flashInterval) % 2 == 0;
+
+                for (int row = 3; row < board.Grid.GetLength(0) - 2; row++)
+                {
+                    for (int col = 0; col < board.Grid.GetLength(1); col++)
+                    {
+                        Tile tile = board.Grid[row, col];
+                        float x = col * TileSize * DrawScale;
+                        float y = row * TileSize * DrawScale;
+                        float size = TileSize * DrawScale;
+                        Rectangle src = new Rectangle(col * board.TileHeight, (row - 3) * board.TileWidth, board.TileWidth, board.TileHeight);
+                        Rectangle dest = new Rectangle(x, y, size, size);
+                        Vector2 origin = Vector2.Zero;
+
+                        if (levelStartActive)
+                        {
+                            Texture2D sheet = showWhite ? whiteSheet : emptyBoardSheet;
+                            Raylib.DrawTexturePro(sheet, src, dest, origin, 0f, Color.White);
+                            continue;
+                        }
+
+                        if (tile.HasDot())
+                            Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
+                        else if (tile.HasPowerPellet() && TimerManager.IsRunning(TimerType.PelletAnim))
+                            Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
+                        else
+                            Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
+                    }
                 }
             }
-        }
         static void DrawMessage(Dictionary<(int col, int row), char> message, TextColor color)
         {
             foreach (var kvp in message)
