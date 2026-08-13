@@ -1,30 +1,26 @@
-using System;
 using System.Numerics;
 using Raylib_cs;
 
 namespace PacManGame
 {
-    // Add the GhostType enum at namespace level
-
     class Program
     {
-        // Internal simulation tile size (matches Actor's pixel-coordinate math).
-        // Don't change this without also re-checking Actor's movement/collision math.
         const int TileSize = 8;
-        // Purely visual multiplier so an 8px tile isn't a postage stamp on screen.
         const float DrawScale = 3f;
-        // Mode timing
-        static ModeType currentMode = ModeType.Scatter; // Start in Scatter
-        // Add a global pause flag
-        static bool isPaused = true; // Start paused
+
+        static bool isPaused = true;
+        static bool isFrozen;
+        static int BufferFrames;
+        static bool ResetGame;
+
         static int PacManAnimFrameIndex;
         static int GhostAnimFrameIndex;
-        
+        static bool playDeathAnim;    
 
-        // 1 frame switch needed so go with bool
         static int PacManAnimSwitcher;
         static int GhostAnimTimer;
         static int PelletAnimTimer;
+        static int FruitPointsTimer;
         
         static Texture2D emptyBoardSheet;
         static Texture2D fullBoardSheet;
@@ -34,7 +30,7 @@ namespace PacManGame
         {
 
             int[][] board = LevelSpecs.board;
-
+            isFrozen = false;
             PacManAnimFrameIndex = 2;
             Board board1 = new(board, TileSize, TileSize);
             Fruit fruit = new Fruit(13, 26, board1);
@@ -54,7 +50,7 @@ namespace PacManGame
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
 
             
-            Raylib.InitWindow(screenWidth, screenHeight, "PacMan - Raylib Test Harness");
+            Raylib.InitWindow(screenWidth, screenHeight, "PacMan");
 
             spriteSheet = Raylib.LoadTexture("assets/AllSprites.png");
             emptyBoardSheet = Raylib.LoadTexture("assets/empty_board.png");
@@ -69,48 +65,40 @@ namespace PacManGame
 
                 if (!isPaused)
                 {
+                    if (ResetGame)
+                    {
+                        ResetGame = false;
+                        GameReset(pacman);
+                    }
                     CanChangeAnimation();
                     HandleInput(pacman);
-                    pacman.UpdateLoop();
-                    if (!pacman.IsValidMove(pacman.direction))
+                    pacman.UpdateLoop(isFrozen);
+                       if (pacman.HasDied){
+                        PacManAnimFrameIndex = 0;
+                        playDeathAnim = true;
+                        isFrozen = true;
+                        pacman.HasDied = false;
+                    }
+                    if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
                         PacManAnimFrameIndex = 1;
                     foreach (var ghost in ghosts)
                     {
-                        ghost.Move();
+                        ghost.Move(isFrozen);
                     }
-                    pacman.CheckGhostCollisions();
-                    if (pacman.IsGameOver())
-                    {
-                        // this is where where we'll end the game
-                        return;
-                    }
+                    if (!playDeathAnim)
+                        pacman.CheckGhostCollisions();
                     timer.UpdateTimer();
                 }
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
                 DrawBoard(board1);
-                if (fruit.IsActive())
-                    DrawFruit(fruit, board1.LEVEL);
-                // // Draw visualizations for all ghosts
-                // foreach (var ghost in ghosts)
-                // {
-                //     DrawEuclideanPath(ghost);
-                //     DrawScatterTarget(ghost);
-                // }
-
+                DrawFruit(fruit, board1.LEVEL);
+                if (!playDeathAnim)
+                    DrawGhosts(ghosts);
                 DrawPacMan(pacman);
-
-                // Draw all ghosts
-                DrawGhosts(ghosts);
-
-                // DrawHud(board1, pacman, ghosts, timer);
-
-                // Draw pause overlay if paused
                 if (isPaused)
-                {
                     DrawPauseOverlay();
-                }
 
                 Raylib.EndDrawing();
             }
@@ -164,155 +152,36 @@ namespace PacManGame
         {
             int screenWidth = Raylib.GetScreenWidth();
             int screenHeight = Raylib.GetScreenHeight();
-
-            // Draw semi-transparent overlay
             Color overlayColor = new Color(0, 0, 0, 180);
             Raylib.DrawRectangle(0, 0, screenWidth, screenHeight, overlayColor);
-
-            // Draw pause text
             string pauseText = "PAUSED";
             string resumeText = "Press 'P' to Resume";
-
             int fontSize = 60;
             int textWidth = Raylib.MeasureText(pauseText, fontSize);
             int textX = (screenWidth - textWidth) / 2;
             int textY = (screenHeight / 2) - 60;
-
             Raylib.DrawText(pauseText, textX, textY, fontSize, Color.Yellow);
-
             fontSize = 30;
             textWidth = Raylib.MeasureText(resumeText, fontSize);
             textX = (screenWidth - textWidth) / 2;
             textY = (screenHeight / 2) + 20;
-
             Raylib.DrawText(resumeText, textX, textY, fontSize, Color.White);
-        }
-
-        static void DrawEuclideanPath(Ghost ghost)
-        {
-            // Get ghost's current tile position
-            (int ghostTileX, int ghostTileY) = ghost.ConvertPixelToTile(ghost.PixelPosX, ghost.PixelPosY);
-
-            // Get target tile for current mode
-            (int targetX, int targetY) = ghost.GetTargetForMode(ghost.CurrentMode);
-
-            // Calculate Euclidean distance
-            double distance = Math.Sqrt(Math.Pow(targetX - ghostTileX, 2) + Math.Pow(targetY - ghostTileY, 2));
-
-            // Convert to screen coordinates (center of tiles)
-            float startScreenX = ghostTileX * TileSize * DrawScale + (TileSize * DrawScale / 2);
-            float startScreenY = ghostTileY * TileSize * DrawScale + (TileSize * DrawScale / 2);
-            float endScreenX = targetX * TileSize * DrawScale + (TileSize * DrawScale / 2);
-            float endScreenY = targetY * TileSize * DrawScale + (TileSize * DrawScale / 2);
-
-            // Draw the straight Euclidean path in cyan
-            Color pathColor = new Color(0, 255, 255, 150); // Cyan with transparency
-            Raylib.DrawLine(
-                (int)startScreenX, (int)startScreenY,
-                (int)endScreenX, (int)endScreenY,
-                pathColor
-            );
-
-            // Draw small dots along the path
-            int numPoints = 10;
-            for (int i = 0; i <= numPoints; i++)
-            {
-                float t = i / (float)numPoints;
-                float x = startScreenX + (endScreenX - startScreenX) * t;
-                float y = startScreenY + (endScreenY - startScreenY) * t;
-                Raylib.DrawCircle((int)x, (int)y, TileSize * DrawScale * 0.06f, pathColor);
-            }
-
-            // Draw the viable directions from the ghost's current position
-            var directions = new Vector2D[] { Vector2D.Up, Vector2D.Left, Vector2D.Down, Vector2D.Right };
-            foreach (var dir in directions)
-            {
-                // Check if this direction is viable
-                if (ghost.IsValidTile(ghostTileX, ghostTileY, dir))
-                {
-                    int nextX = ghostTileX + dir.X;
-                    int nextY = ghostTileY + dir.Y;
-
-                    float dirStartX = ghostTileX * TileSize * DrawScale + (TileSize * DrawScale / 2);
-                    float dirStartY = ghostTileY * TileSize * DrawScale + (TileSize * DrawScale / 2);
-                    float dirEndX = nextX * TileSize * DrawScale + (TileSize * DrawScale / 2);
-                    float dirEndY = nextY * TileSize * DrawScale + (TileSize * DrawScale / 2);
-
-                    // Draw viable direction in green
-                    Color viableColor = new Color(0, 255, 0, 150);
-                    Raylib.DrawLine((int)dirStartX, (int)dirStartY, (int)dirEndX, (int)dirEndY, viableColor);
-
-                    // Draw a small green arrow head
-                    float arrowSize = TileSize * DrawScale * 0.15f;
-                    float angle = (float)Math.Atan2(dir.Y, dir.X);
-                    float arrowX = dirEndX - arrowSize * (float)Math.Cos(angle);
-                    float arrowY = dirEndY - arrowSize * (float)Math.Sin(angle);
-
-                    // Draw arrow tip
-                    Raylib.DrawCircle((int)dirEndX, (int)dirEndY, TileSize * DrawScale * 0.08f, viableColor);
-                }
-            }
-
-            // Draw the selected direction (ghost's current direction) in bold red
-            if (!ghost.direction.Equals(Vector2D.Zero))
-            {
-                int nextX = ghostTileX + ghost.direction.X;
-                int nextY = ghostTileY + ghost.direction.Y;
-
-                float dirStartX = ghostTileX * TileSize * DrawScale + (TileSize * DrawScale / 2);
-                float dirStartY = ghostTileY * TileSize * DrawScale + (TileSize * DrawScale / 2);
-                float dirEndX = nextX * TileSize * DrawScale + (TileSize * DrawScale / 2);
-                float dirEndY = nextY * TileSize * DrawScale + (TileSize * DrawScale / 2);
-
-                // Draw selected direction in bold red
-                Raylib.DrawLine((int)dirStartX, (int)dirStartY, (int)dirEndX, (int)dirEndY, Color.Red);
-                Raylib.DrawCircle((int)dirEndX, (int)dirEndY, TileSize * DrawScale * 0.12f, Color.Red);
-            }
-
-            // Draw a small label showing Euclidean distance
-            float labelX = ghost.PixelPosX * DrawScale + 10;
-            float labelY = ghost.PixelPosY * DrawScale - 20;
-            string distText = $"Euclidean Dist: {distance:F1}";
-            Raylib.DrawText(distText, (int)labelX, (int)labelY, 15, Color.DarkGray);
-        }
-
-        static void DrawScatterTarget(Ghost ghost)
-        {
-            (int scatterX, int scatterY) = ghost.ScatterTarget;
-
-            float screenX = scatterX * TileSize * DrawScale + (TileSize * DrawScale / 2);
-            float screenY = scatterY * TileSize * DrawScale + (TileSize * DrawScale / 2);
-            float radius = TileSize * DrawScale * 0.3f;
-
-            // Draw a semi-transparent circle
-            Color markerColor = new Color(255, 182, 193, 128);
-            Raylib.DrawCircle((int)screenX, (int)screenY, radius, markerColor);
-
-            // Draw a small "X" marker
-            float crossSize = TileSize * DrawScale * 0.2f;
-            Raylib.DrawLine(
-                (int)(screenX - crossSize), (int)(screenY - crossSize),
-                (int)(screenX + crossSize), (int)(screenY + crossSize),
-                new Color(255, 182, 193, 200)
-            );
-            Raylib.DrawLine(
-                (int)(screenX - crossSize), (int)(screenY + crossSize),
-                (int)(screenX + crossSize), (int)(screenY - crossSize),
-                new Color(255, 182, 193, 200)
-            );
         }
         
         static void DrawFruit(Fruit fruit, int level)
         {
+            if (!fruit.IsActive() && fruit.PointsTimer == 0)
+                return;
             float screenX = fruit.PixelPosX * DrawScale;
             float screenY = fruit.PixelPosY * DrawScale;
-            float size = TileSize * DrawScale * 2.0f; // match your old overlapRadius sizing
-
-            Rectangle src = Sprites.FruitSelector(LevelSpecs.GetFruitEntry(level));
-
+            float size = TileSize * DrawScale * 2.0f;
+            Rectangle src;
+            if (fruit.PointsTimer == 0)
+                src = Sprites.FruitSelector(LevelSpecs.GetFruitEntry(level));
+            else
+                src = Sprites.FruitPointsSelector(LevelSpecs.GetFruitEntry(level));
             Rectangle dest = new Rectangle(screenX, screenY, size, size);
-            Vector2 origin = new Vector2(size / 2, size / 2); // center pivot
-
+            Vector2 origin = new Vector2(size / 2, size / 2); 
             Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
         }
         
@@ -320,13 +189,14 @@ namespace PacManGame
         {
             float screenX = pacman.PixelPosX * DrawScale;
             float screenY = pacman.PixelPosY * DrawScale;
-            float size = TileSize * DrawScale * 2.0f; // match your old overlapRadius sizing
-
-            Rectangle src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
-
+            float size = TileSize * DrawScale * 2.0f;
+            Rectangle src;
+            if (!playDeathAnim)
+                src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
+            else
+                src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
             Rectangle dest = new Rectangle(screenX, screenY, size, size);
-            Vector2 origin = new Vector2(size / 2, size / 2); // center pivot
-
+            Vector2 origin = new Vector2(size / 2, size / 2);
             Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
         }
         static void DrawGhosts(List<Ghost> ghosts)
@@ -335,16 +205,16 @@ namespace PacManGame
             {
                 float screenX = ghost.PixelPosX * DrawScale;
                 float screenY = ghost.PixelPosY * DrawScale;
-                float size = TileSize * DrawScale * 2.0f; // match your old overlapRadius sizing
-
-                Rectangle src = Sprites.GhostTypeAndDirectionSelector(ghost.ghostType, ghost.direction)[GhostAnimFrameIndex];
+                float size = TileSize * DrawScale * 2.0f; 
+                Rectangle src;
                 if (ghost.CurrentMode.Equals(ModeType.Dead))
                     src = Sprites.GhostDeadSelector(ghost.direction);
                 else if (ghost.CurrentMode.Equals(ModeType.Fright))
-                    src = Sprites.GhostFrightSelector(true)[GhostAnimFrameIndex];
+                    src = Sprites.GhostFrightSelector(ghost.PacMan.timer.isBlue)[GhostAnimFrameIndex];
+                else
+                    src = Sprites.GhostTypeAndDirectionSelector(ghost.ghostType, ghost.direction)[GhostAnimFrameIndex];
                 Rectangle dest = new Rectangle(screenX, screenY, size, size);
-                Vector2 origin = new Vector2(size / 2, size / 2); // center pivot
-
+                Vector2 origin = new Vector2(size / 2, size / 2); 
                 Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
             }
         }
@@ -352,10 +222,8 @@ namespace PacManGame
         static void DrawHud(Board board, PacMan pacman, List<Ghost> ghosts, LevelTimer timer)
         {
             int hudY = board.Grid.GetLength(0) * TileSize * (int)DrawScale + 5;
-
             string line1 = $"Score: {board.Score}   Lives: {pacman.LIVES}   Dots left: {board.RemainingDots}  FPS: {Raylib.GetFPS()}";
             Raylib.DrawText(line1, 10, hudY, 20, Color.White);
-
             (int tileX, int tileY) = pacman.ConvertPixelToTile(pacman.PixelPosX, pacman.PixelPosY);
             string dir = pacman.direction.Equals(Vector2D.Zero) ? "None" :
                         pacman.direction.Equals(Vector2D.Up) ? "Up" :
@@ -367,10 +235,8 @@ namespace PacManGame
                         pacman.bufferDirection.Equals(Vector2D.Left) ? "Left" : "Right";
             string line2 = $"Tile: ({tileX}, {tileY})  Dir: {dir}  Buffer: {buf}";
             Raylib.DrawText(line2, 10, hudY + 25, 20, Color.LightGray);
-
             string modeText = timer.GetCurrentMode().ToString();
             float timeRemaining;
-
             if (timer.GetCurrentMode() == ModeType.Fright)
             {
                 timeRemaining = timer.FrightTimer / 60f;
@@ -409,30 +275,57 @@ namespace PacManGame
         }
         public static void CanChangeAnimation()
         {
-            if (PacManAnimSwitcher == 0)
-            {
-                PacManAnimFrameIndex = (PacManAnimFrameIndex + 1) % 3;
-                PacManAnimSwitcher = 1;
-            }
+
+            if (!playDeathAnim)
+                IncrementPacManTimers(Sprites.PacmanDirectionList[0].Count, 1);
             else
-            {
-                PacManAnimSwitcher--;
-            }
-            if (GhostAnimTimer == 0)
-            {
-                GhostAnimFrameIndex = (GhostAnimFrameIndex + 1) % 2;
-                GhostAnimTimer = 3;
-            }
-            else
-            {
-                GhostAnimTimer--;
-            }
+                IncrementPacManTimers(Sprites.PacManDead.Count, 10);
+            IncrementGhostTimer(Sprites.BlinkyDirectionList[0].Count, 3);
+            
             if (PelletAnimTimer == 0)
-            {
-                PelletAnimTimer = 9;
-            }
+                    PelletAnimTimer = 25;
             else
                 PelletAnimTimer--;
+        }
+        public static void GameReset(PacMan pacMan)
+        {
+            playDeathAnim = false;
+            isFrozen = false;
+            PacManAnimFrameIndex = Sprites.PacmanDirectionList[0].Count - 1;
+            pacMan.ResetGame();
+        }
+
+        public static void IncrementPacManTimers(int AvailableFrames, int FrameBuffer)
+        {
+            if (PacManAnimSwitcher == 0)
+            {
+                PacManAnimFrameIndex = (PacManAnimFrameIndex + 1) % AvailableFrames;
+                if (PacManAnimFrameIndex+1 == Sprites.PacManDead.Count)
+                {
+                    ResetGame = true;
+                }
+                PacManAnimSwitcher = FrameBuffer;
+            }
+            else
+                PacManAnimSwitcher--;
+        }
+        public static bool IsBufferFrame()
+        {
+            if (BufferFrames == 0)
+                return false;
+            else
+                BufferFrames--;
+            return true;
+        }
+        public static void IncrementGhostTimer(int AvailableFrames, int FrameBuffer)
+        {
+            if (GhostAnimTimer == 0)
+            {
+                GhostAnimFrameIndex = (GhostAnimFrameIndex + 1) % AvailableFrames;
+                GhostAnimTimer = FrameBuffer;
+            }
+            else
+                GhostAnimTimer--;
         }
         
     }

@@ -99,8 +99,12 @@ namespace PacManGame
                 HouseState = GhostHouseState.Normal;
             }
         }
-        public void Move()
+        public void Move(bool Frozen)
         {
+
+            if (Frozen)
+                return;
+
             (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
             // check Speed first
             CheckSpeedForGhost(TileX, TileY);
@@ -375,10 +379,6 @@ namespace PacManGame
         public void UpdateMode(ModeType mode)
         {
 
-            if (mode.Equals(ModeType.Dead))
-            {
-
-            }
             if (mode.Equals(ModeType.Scatter) && isCruiseElroyActivated())
                 mode = ModeType.Chase;
 

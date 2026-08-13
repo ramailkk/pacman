@@ -7,9 +7,9 @@ static class Sprites
     private static readonly Dictionary<Vector2D, int> DirToInt = new()
         {
             {Vector2D.Right, 0},
-            {Vector2D.Left,1},
-            {Vector2D.Up , 2 },
-            {Vector2D.Down, 3}
+            {Vector2D.Left,  1},
+            {Vector2D.Up ,   2},
+            {Vector2D.Down,  3}
         };
     public static List<List<Rectangle>> PacmanDirectionList;
     public static List<List<Rectangle>> BlinkyDirectionList;
@@ -21,6 +21,8 @@ static class Sprites
     public static List<Rectangle> DeadEyes;
 
     public static Dictionary<FruitType, Rectangle> FruitToRect;
+    public static Dictionary<FruitType, Rectangle> FruitToPointsRect;
+    public static List<Rectangle> PacManDead;
 
 
     // ... etc for eyes, fruit, etc.
@@ -123,11 +125,12 @@ static class Sprites
         FrightBlue = new List<Rectangle>();
         FrightWhite = new List<Rectangle>();
 
-        (int startFrightX, int startFrightY) = (128, 64);
+        (int startFrightBlueX, int startFrightBlueY) = (128, 64);
+        (int startFrightWhiteX, int startFrightWhiteY) = (160, 64);
         for (int i = 0; i < 2; i++)
         {
-            FrightBlue.Add(new Rectangle(startFrightX + offsetX * i, startFrightY,             offsetX, offsetY));
-            FrightWhite.Add(new Rectangle(startFrightX + offsetX * i, startFrightY ,     offsetX, offsetY));
+            FrightBlue.Add(new Rectangle(startFrightBlueX + offsetX * i, startFrightBlueY,             offsetX, offsetY));
+            FrightWhite.Add(new Rectangle(startFrightWhiteX + offsetX * i, startFrightWhiteY ,     offsetX, offsetY));
         }
         DeadEyes = new List<Rectangle>();
         (int startEyesX, int startEyesY) = (128, 80);
@@ -144,12 +147,36 @@ static class Sprites
                 FruitType fruit = values[i];
                 FruitToRect[fruit] = new Rectangle(startFruitX + offsetX*i, startFruitY, offsetX, offsetY);
             }
+        FruitToPointsRect = new Dictionary<FruitType, Rectangle>();
+        (int startFruitPointsX, int startFruitPointsY) = (0, 144);
+        for (int i = 0; i< 5; i++)
+            {
+                FruitType fruit = values[i];
+                FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY, offsetX, offsetY);
+                startFruitPointsX += offsetX;
+            }
+            for (int i = 5; i< values.Length; i++)
+            {
+                FruitType fruit = values[i];
+                FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY + offsetY*i, offsetX, offsetY);
+            }
+
+        PacManDead = new List<Rectangle>();
+        (int startDeadX, int startDeadY) = (48,0);
+        for (int i = 0; i < 11; i++)
+        {
+            PacManDead.Add(new Rectangle(startDeadX + offsetX * i, startDeadY,             offsetX, offsetY));
+        }
 
     }
 
         public static List<Rectangle> PacManDirectionSelector(Vector2D direction)
         {
          return PacmanDirectionList[DirToInt[direction]];   
+        }
+        public static List<Rectangle> PacManDeathSelector()
+        {
+            return PacManDead;
         }
         public static List<Rectangle> GhostTypeAndDirectionSelector(GhostType ghostType, Vector2D direction)
         {
@@ -184,5 +211,10 @@ static class Sprites
         {
             return FruitToRect[fruit];
         }
+        public static Rectangle FruitPointsSelector(FruitType fruit)
+        {
+            return FruitToPointsRect[fruit];
+        }
+
 }
 }

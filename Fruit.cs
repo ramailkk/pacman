@@ -10,6 +10,7 @@ namespace PacManGame
         public int PixelPosY;
         public int FruitTimer;
         public bool isActive;
+        public int PointsTimer;
         public Random random;
         public Board Board;
         public bool hasShown1;
@@ -44,12 +45,14 @@ namespace PacManGame
                 if (FruitTimer > 0)
                     FruitTimer--;
                 else
-                    SetInActive();
+                    SetInActive(false);
             }
+            if (PointsTimer > 0)
+                PointsTimer--;
         }
         public void ResetForNextLevel()
         {
-            SetInActive();
+            SetInActive(false);
             FruitTimer = 0;
             hasShown1 = false;
             hasShown2 = false;
@@ -60,12 +63,15 @@ namespace PacManGame
         }
         public void SetActive()
         {
+            PointsTimer = 0;
             isActive = true;
             FruitTimer = (int)((9.0 + (random.NextDouble())) * 60);
         }
-        public void SetInActive()
+        public void SetInActive(bool isEaten)
         {
             isActive = false;
+            if (isEaten)
+                PointsTimer = 120;
         }
         public (int pixelX, int pixelY) ConvertTileToPixel(int tileX, int tileY)
         {

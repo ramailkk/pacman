@@ -29,18 +29,19 @@ namespace PacManGame
             bufferDirection = Vector2D.Zero;
             direction = Vector2D.Left;
             FreezeFramesRemaining = 0;
-            HasDied = false;
         }
 
-        public void UpdateLoop()
+        public void UpdateLoop(bool Frozen)
         {
             Fruit.Update();
             CheckSpeed();
-            Move();
+            Move(Frozen);
             CheckConsumables();
         }
-        public void Move()
+        public void Move(bool Frozen)
         {
+            if (Frozen)
+                return;
             int moveCount = GetStepsThisTick();
             for (int i = 0; i < moveCount; i++)
             {
@@ -118,9 +119,8 @@ namespace PacManGame
                     else if (!ghost.CurrentMode.Equals(ModeType.Fright) && !ghost.CurrentMode.Equals(ModeType.Dead))
                     {
                         LIVES--;
+                        Fruit.SetInActive(false);
                         HasDied = true;
-                        Fruit.SetInActive();
-                        ResetGame();
                     }
                 }
             }
@@ -138,7 +138,6 @@ namespace PacManGame
 
         public void ResetForNextLevel()
         {
-            HasDied = false;
             EatenDotCounter = 0;
             Fruit.ResetForNextLevel();
             board.SetupNextLevel();
@@ -189,7 +188,7 @@ namespace PacManGame
                 int pixelDistX =  Math.Abs(this.PixelPosX - Fruit.PixelPosX);
                 if (pixelDistX <= board.TileWidth / 2 && PixelPosY == Fruit.PixelPosY)
                 {
-                    Fruit.SetInActive();
+                    Fruit.SetInActive(true);
                     board.UpdateFruitScore();
                 }
             }

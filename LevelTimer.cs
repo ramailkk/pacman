@@ -7,11 +7,15 @@ public class LevelTimer
     public ModeType GlobalMode; // Scatter or Chase (not Fright - that's separate)
     public int FrightTimer;
     public int[] FrightSchedule;
+    public bool isBlue;
     public int CurrentLevel;
     public int[][] GlobalSchedule;
+    const int FlashHalfCycleFrames = 14; 
+
     public List<Ghost> Ghosts;
     public LevelTimer(List<Ghost> ghosts)
     {
+        isBlue = true;
         Ghosts = ghosts;
         Initialize();
         GlobalSchedule =
@@ -35,8 +39,21 @@ public class LevelTimer
 
     public void UpdateTimer()
     {
-         if (FrightTimer > 0)
+     if (FrightTimer > 0)
     {
+        int flashCount = LevelSpecs.GetEntry(CurrentLevel, LevelSpecs.FlashCount);
+        int flashWindowFrames = flashCount * FlashHalfCycleFrames * 2;
+
+        if (FrightTimer <= flashWindowFrames)
+        {
+            int framesIntoFlash = flashWindowFrames - FrightTimer;
+            isBlue = (framesIntoFlash / FlashHalfCycleFrames) % 2 == 0;
+        }
+        else
+        {
+            isBlue = true; // solid blue outside the flash window
+        }
+
         FrightTimer--;
         if (FrightTimer == 0)
             UpdateAllGhostMode(GlobalMode);
@@ -57,6 +74,7 @@ public class LevelTimer
     }
     public void InitiateFrightTimer()
     {
+        isBlue = true;
         FrightTimer = FrightSchedule[GetFrightLevelIndex()];
     }
 
