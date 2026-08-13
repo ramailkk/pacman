@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Raylib_cs;
 
 namespace PacManGame
@@ -14,14 +15,27 @@ namespace PacManGame
         const float DrawScale = 3f;
         // Mode timing
         static ModeType currentMode = ModeType.Scatter; // Start in Scatter
-
         // Add a global pause flag
         static bool isPaused = true; // Start paused
+        static int PacManAnimFrameIndex;
+        static int GhostAnimFrameIndex;
+        
+
+        // 1 frame switch needed so go with bool
+        static int PacManAnimSwitcher;
+        static int GhostAnimTimer;
+        static int PelletAnimTimer;
+        
+        static Texture2D emptyBoardSheet;
+        static Texture2D fullBoardSheet;
+        static Texture2D spriteSheet;
 
         static void Main(string[] args)
         {
 
             int[][] board = LevelSpecs.board;
+
+            PacManAnimFrameIndex = 2;
             Board board1 = new(board, TileSize, TileSize);
             Fruit fruit = new Fruit(13, 26, board1);
             PacMan pacman = new PacMan(13, 26, board1, fruit);
@@ -39,27 +53,31 @@ namespace PacManGame
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + 100;
 
+            
             Raylib.InitWindow(screenWidth, screenHeight, "PacMan - Raylib Test Harness");
+
+            spriteSheet = Raylib.LoadTexture("assets/AllSprites.png");
+            emptyBoardSheet = Raylib.LoadTexture("assets/empty_board.png");
+            fullBoardSheet = Raylib.LoadTexture("assets/full_board.png");
+            
             Raylib.SetTargetFPS(60);
 
             while (!Raylib.WindowShouldClose())
             {
-                // Handle pause toggle
                 if (Raylib.IsKeyPressed(KeyboardKey.P))
-                {
                     isPaused = !isPaused;
-                }
 
-                // Only update game logic if not paused
                 if (!isPaused)
                 {
+                    CanChangeAnimation();
                     HandleInput(pacman);
                     pacman.UpdateLoop();
+                    if (!pacman.IsValidMove(pacman.direction))
+                        PacManAnimFrameIndex = 1;
                     foreach (var ghost in ghosts)
                     {
                         ghost.Move();
                     }
-
                     pacman.CheckGhostCollisions();
                     if (pacman.IsGameOver())
                     {
@@ -67,15 +85,13 @@ namespace PacManGame
                         return;
                     }
                     timer.UpdateTimer();
-
                 }
-
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
                 DrawBoard(board1);
                 if (fruit.IsActive())
-                    DrawFruit(fruit);
+                    DrawFruit(fruit, board1.LEVEL);
                 // // Draw visualizations for all ghosts
                 // foreach (var ghost in ghosts)
                 // {
@@ -88,7 +104,7 @@ namespace PacManGame
                 // Draw all ghosts
                 DrawGhosts(ghosts);
 
-                DrawHud(board1, pacman, ghosts, timer);
+                // DrawHud(board1, pacman, ghosts, timer);
 
                 // Draw pause overlay if paused
                 if (isPaused)
@@ -116,35 +132,30 @@ namespace PacManGame
 
         static void DrawBoard(Board board)
         {
-            for (int row = 0; row < board.Grid.GetLength(0); row++)
+            for (int row = 3; row < board.Grid.GetLength(0)-2; row++)
             {
                 for (int col = 0; col < board.Grid.GetLength(1); col++)
                 {
                     Tile tile = board.Grid[row, col];
-
                     float x = col * TileSize * DrawScale;
                     float y = row * TileSize * DrawScale;
                     float size = TileSize * DrawScale;
+                    Rectangle src = new Rectangle(col*board.TileHeight, (row-3)*board.TileWidth, board.TileWidth, board.TileHeight);
+                    Rectangle dest = new Rectangle(x, y, size, size);
+                    Vector2 origin = Vector2.Zero;
 
-                    switch (tile.Type)
+                    if (tile.HasDot())
+                        Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
+                    else if (tile.HasPowerPellet())
                     {
-                        case TileType.Wall:
-                            Raylib.DrawRectangle((int)x, (int)y, (int)size, (int)size, Color.DarkBlue);
-                            break;
-                        case TileType.Dot:
-                            Raylib.DrawCircle((int)(x + size / 2), (int)(y + size / 2), size * 0.1f, Color.Beige);
-                            break;
-                        case TileType.PowerPellet:
-                            Raylib.DrawCircle((int)(x + size / 2), (int)(y + size / 2), size * 0.25f, Color.Beige);
-                            break;
-                        case TileType.GhostHouse:
-                            Raylib.DrawRectangle((int)x, (int)y, (int)size, (int)size, new Color(30, 30, 30, 255));
-                            break;
-                        case TileType.DeadSpace:
-                        case TileType.Empty:
-                        default:
-                            break;
+                        if (PelletAnimTimer == 0)
+                            Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
+                        else
+                            Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
                     }
+                    else
+                        Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
+
                 }
             }
         }
@@ -291,142 +302,50 @@ namespace PacManGame
             );
         }
         
-        static void DrawFruit(Fruit fruit)
+        static void DrawFruit(Fruit fruit, int level)
         {
             float screenX = fruit.PixelPosX * DrawScale;
             float screenY = fruit.PixelPosY * DrawScale;
-            float size = TileSize * DrawScale;
-            Raylib.DrawCircle((int)screenX, (int)screenY, size * 0.25f , Color.Red);
+            float size = TileSize * DrawScale * 2.0f; // match your old overlapRadius sizing
 
+            Rectangle src = Sprites.FruitSelector(LevelSpecs.GetFruitEntry(level));
+
+            Rectangle dest = new Rectangle(screenX, screenY, size, size);
+            Vector2 origin = new Vector2(size / 2, size / 2); // center pivot
+
+            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
         }
+        
         static void DrawPacMan(PacMan pacman)
         {
             float screenX = pacman.PixelPosX * DrawScale;
             float screenY = pacman.PixelPosY * DrawScale;
-            float baseRadius = TileSize * DrawScale * 0.45f;
-            float overlapRadius = baseRadius * 1.6f; // Overlap neighboring tiles
+            float size = TileSize * DrawScale * 2.0f; // match your old overlapRadius sizing
 
-            // Draw main body
-            Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius, Color.Yellow);
+            Rectangle src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
 
-            // Draw Pac-Man's mouth (pie slice)
-            float mouthAngle = 0.3f; // Radians
-            float startAngle = -mouthAngle;
-            float endAngle = mouthAngle;
+            Rectangle dest = new Rectangle(screenX, screenY, size, size);
+            Vector2 origin = new Vector2(size / 2, size / 2); // center pivot
 
-            // Mouth based on direction
-            if (pacman.direction.Equals(Vector2D.Right))
-            {
-                startAngle = -mouthAngle;
-                endAngle = mouthAngle;
-            }
-            else if (pacman.direction.Equals(Vector2D.Left))
-            {
-                startAngle = (float)Math.PI - mouthAngle;
-                endAngle = (float)Math.PI + mouthAngle;
-            }
-            else if (pacman.direction.Equals(Vector2D.Up))
-            {
-                startAngle = -(float)Math.PI / 2 - mouthAngle;
-                endAngle = -(float)Math.PI / 2 + mouthAngle;
-            }
-            else if (pacman.direction.Equals(Vector2D.Down))
-            {
-                startAngle = (float)Math.PI / 2 - mouthAngle;
-                endAngle = (float)Math.PI / 2 + mouthAngle;
-            }
-
-            // // Draw mouth (black triangle/pie slice)
-            // Raylib.Cricle(
-            //     (int)screenX, (int)screenY,
-            //     overlapRadius,
-            //     startAngle * 180 / (float)Math.PI,
-            //     endAngle * 180 / (float)Math.PI,
-            //     10,
-            //     Color.Black
-            // );
-
-            // Draw eye
-            float eyeX = screenX + overlapRadius * 0.3f;
-            float eyeY = screenY - overlapRadius * 0.2f;
-            float eyeRadius = overlapRadius * 0.2f;
-            Raylib.DrawCircle((int)eyeX, (int)eyeY, eyeRadius, Color.Black);
+            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
         }
-
         static void DrawGhosts(List<Ghost> ghosts)
         {
             foreach (var ghost in ghosts)
             {
                 float screenX = ghost.PixelPosX * DrawScale;
                 float screenY = ghost.PixelPosY * DrawScale;
-                float baseRadius = TileSize * DrawScale * 0.45f;
-                float overlapRadius = baseRadius * 1.6f;
+                float size = TileSize * DrawScale * 2.0f; // match your old overlapRadius sizing
 
-                // Assign different colors based on ghost type
-                Color ghostColor;
-                if (ghost.CurrentMode == ModeType.Fright)
-                {
-                    ghostColor = Color.Blue;
-                }
-                else
-                {
-                    ghostColor = ghost.ghostType switch
-                    {
-                        GhostType.Blinky => Color.Red,
-                        GhostType.Pinky => new Color(255, 182, 193, 255),
-                        GhostType.Inky => Color.SkyBlue,
-                        GhostType.Clyde => new Color(255, 165, 0, 255),
-                        _ => Color.Red
-                    };
-                }
+                Rectangle src = Sprites.GhostTypeAndDirectionSelector(ghost.ghostType, ghost.direction)[GhostAnimFrameIndex];
+                if (ghost.CurrentMode.Equals(ModeType.Dead))
+                    src = Sprites.GhostDeadSelector(ghost.direction);
+                else if (ghost.CurrentMode.Equals(ModeType.Fright))
+                    src = Sprites.GhostFrightSelector(true)[GhostAnimFrameIndex];
+                Rectangle dest = new Rectangle(screenX, screenY, size, size);
+                Vector2 origin = new Vector2(size / 2, size / 2); // center pivot
 
-                if (!ghost.CurrentMode.Equals(ModeType.Dead)){
-                // Ghost body - circular
-                Raylib.DrawCircle((int)screenX, (int)screenY, overlapRadius, ghostColor);
-
-                // Ghost bottom wavy edge (floating effect)
-                float waveOffset = overlapRadius * 0.15f;
-                for (int i = -3; i <= 3; i++)
-                {
-                    float x = screenX + i * (overlapRadius * 0.4f);
-                    float y = screenY + overlapRadius - Math.Abs(i) * waveOffset * 0.5f;
-                    float r = overlapRadius * 0.2f;
-                    Raylib.DrawCircle((int)x, (int)y, r, ghostColor);
-                    }
-                }
-
-                    // Eyes (larger for overlap version)
-                    float eyeOffset = overlapRadius * 0.35f;
-                float eyeRadius = overlapRadius * 0.3f;
-
-                // White eyes
-                Raylib.DrawCircle((int)(screenX - eyeOffset), (int)(screenY - eyeOffset * 0.3f), eyeRadius, Color.White);
-                Raylib.DrawCircle((int)(screenX + eyeOffset), (int)(screenY - eyeOffset * 0.3f), eyeRadius, Color.White);
-
-                // Pupils
-                float pupilRadius = eyeRadius * 0.5f;
-                float pupilOffset = eyeRadius * 0.3f;
-
-                if (ghost.direction.Equals(Vector2D.Left))
-                {
-                    Raylib.DrawCircle((int)(screenX - eyeOffset - pupilOffset), (int)(screenY - eyeOffset * 0.3f), pupilRadius, Color.Black);
-                    Raylib.DrawCircle((int)(screenX + eyeOffset - pupilOffset), (int)(screenY - eyeOffset * 0.3f), pupilRadius, Color.Black);
-                }
-                else if (ghost.direction.Equals(Vector2D.Right))
-                {
-                    Raylib.DrawCircle((int)(screenX - eyeOffset + pupilOffset), (int)(screenY - eyeOffset * 0.3f), pupilRadius, Color.Black);
-                    Raylib.DrawCircle((int)(screenX + eyeOffset + pupilOffset), (int)(screenY - eyeOffset * 0.3f), pupilRadius, Color.Black);
-                }
-                else if (ghost.direction.Equals(Vector2D.Up))
-                {
-                    Raylib.DrawCircle((int)(screenX - eyeOffset), (int)(screenY - eyeOffset * 0.3f - pupilOffset), pupilRadius, Color.Black);
-                    Raylib.DrawCircle((int)(screenX + eyeOffset), (int)(screenY - eyeOffset * 0.3f - pupilOffset), pupilRadius, Color.Black);
-                }
-                else
-                {
-                    Raylib.DrawCircle((int)(screenX - eyeOffset), (int)(screenY - eyeOffset * 0.3f + pupilOffset), pupilRadius, Color.Black);
-                    Raylib.DrawCircle((int)(screenX + eyeOffset), (int)(screenY - eyeOffset * 0.3f + pupilOffset), pupilRadius, Color.Black);
-                }
+                Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
             }
         }
 
@@ -488,5 +407,33 @@ namespace PacManGame
             string line5 = $"Status: {pauseStatus} (Press P to toggle)";
             Raylib.DrawText(line5, 10, hudY + 100, 20, pauseColor);
         }
+        public static void CanChangeAnimation()
+        {
+            if (PacManAnimSwitcher == 0)
+            {
+                PacManAnimFrameIndex = (PacManAnimFrameIndex + 1) % 3;
+                PacManAnimSwitcher = 1;
+            }
+            else
+            {
+                PacManAnimSwitcher--;
+            }
+            if (GhostAnimTimer == 0)
+            {
+                GhostAnimFrameIndex = (GhostAnimFrameIndex + 1) % 2;
+                GhostAnimTimer = 3;
+            }
+            else
+            {
+                GhostAnimTimer--;
+            }
+            if (PelletAnimTimer == 0)
+            {
+                PelletAnimTimer = 9;
+            }
+            else
+                PelletAnimTimer--;
+        }
+        
     }
 }

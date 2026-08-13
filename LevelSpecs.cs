@@ -88,6 +88,11 @@ namespace PacManGame
             Level = Math.Min(Level, array.Length) - 1;
             return array[Level];
         }
+        public static FruitType GetFruitEntry(int Level)
+        {
+            Level = Math.Min(Level, BonusFruit.Length) - 1;
+            return BonusFruit[Level];
+        }
 
     }
 }

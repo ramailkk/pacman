@@ -116,7 +116,8 @@ namespace PacManGame
                 }
                 else
                 {
-                    direction = GhostLookAhead();
+                    (int tileX, int tileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+                    direction = GhostLookAhead(tileX,tileY);
                     (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
                 }
                 return;
@@ -129,7 +130,7 @@ namespace PacManGame
                     {
                         GhostType.Inky => Vector2D.Right,
                         GhostType.Clyde => Vector2D.Left,
-                        _ => Vector2D.Zero // Blinky/Pinky already aligned in X
+                        _ => Vector2D.Up // Blinky/Pinky already aligned in X
                     };
 
                     if (IsInsideDoor(ghostDirection, 13, 17))
@@ -155,7 +156,7 @@ namespace PacManGame
                 {
                     GhostType.Inky => Vector2D.Right,
                     GhostType.Clyde => Vector2D.Left,
-                    _ => Vector2D.Zero // Blinky/Pinky already aligned in X
+                    _ => Vector2D.Up // Blinky/Pinky already aligned in X
                 };
 
                 if (!hasAlignedToDoor)
@@ -220,6 +221,7 @@ namespace PacManGame
 
         public bool IsAtStartingPositions(Vector2D direction)
         {
+            this.direction = direction;
             if (ghostType.Equals(GhostType.Blinky))
                 return true;
             if ((PixelPosX, PixelPosY) == GetStartCords())
@@ -260,15 +262,18 @@ namespace PacManGame
         }
         public bool IsInsideDoor(Vector2D dir, int MiddleTileX, int MiddleTileY)
         {
+            direction = dir;
             return HasAlignedToDoor(dir, MiddleTileX, MiddleTileY);
         }
 
         public bool HasExitedDoor(int MiddleTileX, int MiddleTileY)
         {
+            direction = Vector2D.Up;
             return HasPassedDoor(Vector2D.Up, MiddleTileX, MiddleTileY);
         }
         public bool HasEnteredDoor(int MiddleTileX, int MiddleTileY)
         {
+            direction = Vector2D.Down;
             return HasPassedDoor(Vector2D.Down, MiddleTileX, MiddleTileY);
         }
 
@@ -336,11 +341,12 @@ namespace PacManGame
             else
                 return viableDirections[0];
         }
-        public Vector2D GhostLookAhead()
+        public Vector2D GhostLookAhead(int tileX, int tileY)
         {
             if (!ghostType.Equals(GhostType.Blinky))
             {
-                if (IsValidMove(direction))
+
+                if (IsValidTile(tileX, tileY,direction))
                     return direction;
                 else
                     return direction.Reverse();
