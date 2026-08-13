@@ -246,6 +246,8 @@ namespace PacManGame
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.FrightGhostSpeed);
             else if (isCruiseElroyActivated())
                 return;
+            else if (this.HouseState.Equals(GhostHouseState.Home))
+                speed = 60;
             else if (CurrentMode.Equals(ModeType.Chase) || CurrentMode.Equals(ModeType.Scatter))
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostSpeed);
         }

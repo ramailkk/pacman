@@ -53,8 +53,8 @@ namespace PacManGame
             }
             DecideDirection();
             // Calculate new pixel position based on direction
-            int newPixelX = PixelPosX + (direction.X);
-            int newPixelY = PixelPosY + (direction.Y);
+            int newPixelX = PixelPosX + direction.X;
+            int newPixelY = PixelPosY + direction.Y;
             (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
             (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
@@ -119,7 +119,7 @@ namespace PacManGame
                         MULT++; //Reset this back to 1 when Fright is Intiaited 
                         EatenGhostsCounter++;
                     }
-                    else if (!ghost.CurrentMode.Equals(ModeType.Fright) && !ghost.CurrentMode.Equals(ModeType.Dead))
+                    else if (!ghost.CurrentMode.Equals(ModeType.Fright) && !ghost.CurrentMode.Equals(ModeType.Dead) && !HasDied)
                     {
                         LIVES--;
                         Fruit.SetInActive(false);
@@ -174,8 +174,6 @@ namespace PacManGame
                         ghost.UpdateMode(ModeType.Fright);
                 }
                 board.UpdatePowerScore();
-                if (board.RemainingDots == 0)
-                    ResetForNextLevel();
             }
             else if (tile.HasDot())
             {
@@ -183,9 +181,6 @@ namespace PacManGame
                 FreezeFramesRemaining = 1;
                 EatenDotCounter++;
                 board.UpdateDotScore();
-                // Reseting for Next Level here
-                if (board.RemainingDots == 0)
-                    ResetForNextLevel();
             }
             else if (Fruit.IsActive())
             {

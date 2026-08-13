@@ -32,6 +32,10 @@ namespace PacManGame
         public int LEVEL;
         public Random rng;
         private const int Seed = 12345;
+
+        public Dictionary<(int col, int row), char> ReadyMessage;
+
+
         public Board(int[][] reference, int tileWidth, int tileHeight)
         {
             TileHeight = tileHeight;
@@ -45,10 +49,6 @@ namespace PacManGame
             Grid = SetupBoard(reference);
             LEVEL = 1;
         }
-        // public void Main(string[] args)
-        // {
-        //     Board board = new Board()
-        // }
         private Tile[,] SetupBoard(int[][] reference)
         {
             Tile[,] tiles = new Tile[reference.Length, reference[0].Length];
@@ -58,6 +58,11 @@ namespace PacManGame
                 for (int j = 0; j < tiles.GetLength(1); j++)
                 {
                     int value = reference[i][j];
+
+
+
+
+
                     (TileType type, bool isRedZone) = IntToTile[value];
                     tiles[i, j] = new Tile(TileHeight, TileWidth, type, isRedZone);
                     if (type == TileType.Dot)
@@ -87,7 +92,6 @@ namespace PacManGame
         }
         public void SetupNextLevel()
         {
-            Score = 0;
             TotalDots = 0;
             TotalEnergizers = 0;
             TotalSmallDots = 0;
