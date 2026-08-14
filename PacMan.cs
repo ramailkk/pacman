@@ -112,9 +112,10 @@ namespace PacManGame
                 {
                     if (ghost.CurrentMode.Equals(ModeType.Fright))
                     {
-                        ghost.HasDied = true;
+                        ghost.DeathState = DiedTransitionState.JustDied;
                         ghost.UpdateMode(ModeType.Dead);
                         ghost.UpdateGhostHouseState(GhostHouseState.Enter);
+                        ghost.justDied = true;
                         board.Score += 200 * (int)Math.Pow(2, MULT);
                         MULT++; //Reset this back to 1 when Fright is Intiaited 
                         EatenGhostsCounter++;
@@ -124,6 +125,7 @@ namespace PacManGame
                         LIVES--;
                         Fruit.SetInActive(false);
                         HasDied = true;
+                        
                     }
                 }
             }
@@ -201,7 +203,7 @@ namespace PacManGame
         {
             foreach(var ghost in ghosts)
             {
-                if (ghost.HasDied)
+                if (ghost.DeathState.Equals(DiedTransitionState.JustDied))
                     return true;
             }
             return false;

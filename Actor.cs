@@ -80,25 +80,35 @@ namespace PacManGame
             return (wrappedX, wrappedY);
         }
         public bool IsValidMove(Vector2D currentDirection)
-        {
-            if (currentDirection.Equals(Vector2D.Zero))
-                return false;
+{
+    if (currentDirection.Equals(Vector2D.Zero))
+        return false;
 
-            int newPixelX = PixelPosX + currentDirection.X;
-            int newPixelY = PixelPosY + currentDirection.Y;
-            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
-            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
-            int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
-            int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
-            // Wrap outline pixels too (important if offset pushes beyond edges)
-            (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
-            (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
-            Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
-            if (!IsTileWalkable(outlineTile))
-                return false;
-            Tile targetTile = board.Grid[tileY, tileX];
-            return IsTileWalkable(targetTile);
-        }
+    int newPixelX = PixelPosX + currentDirection.X;
+    int newPixelY = PixelPosY + currentDirection.Y;
+    (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
+    (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
+    Tile targetTile = board.Grid[tileY, tileX];
+
+    if (!IsTileWalkable(targetTile))
+        return false;
+
+    // Only run the extra look-ahead when actually turning (changing axis),
+    // to stop the sprite visually clipping a corner mid-turn.
+    bool isTurning = !currentDirection.Equals(direction);
+    if (isTurning)
+    {
+        int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
+        int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
+        (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
+        (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
+        Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
+        if (!IsTileWalkable(outlineTile))
+            return false;
+    }
+
+    return true;
+}
         public bool IsValidTile(int tileX, int tileY, Vector2D currentDirection)
         {
             (int newTileX, int newTileY) = (tileX + currentDirection.X, tileY + currentDirection.Y);

@@ -24,6 +24,7 @@ namespace PacManGame
         Inky,
         Clyde
     }
+    public enum DiedTransitionState { None, JustDied, LateDied }
 
     // up, left, down, right preference for tiles if all are same distance away from targetTile. 
     public class Ghost : Actor
@@ -48,8 +49,10 @@ namespace PacManGame
         public GhostType ghostType;
         public Ghost Blinky;
         public bool HasDied;
-
+        
+        public DiedTransitionState DeathState;
         // movement flags
+        public bool justDied;
         public bool hasAlignedToDoor;
         public bool hasEnteredDoor;
         public bool canReverse;
@@ -62,6 +65,7 @@ namespace PacManGame
                 { ModeType.Chase, CalculateTargetTileForEachGhost() },
                 { ModeType.Dead, (13,14)} //Representing DoorTile that ghosts will run to get to GhostHouse
             };
+            this.DeathState = DiedTransitionState.None;
             this.ghostType = ghostType;
             Initialize();
         }
@@ -102,7 +106,7 @@ namespace PacManGame
         public void Move(bool Frozen)
         {
 
-            if (Frozen)
+            if (Frozen && !DeathState.Equals(DiedTransitionState.LateDied))
                 return;
 
             (int TileX, int TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
@@ -177,7 +181,11 @@ namespace PacManGame
                     if (!hasEnteredDoor)
                     {
                         if (HasEnteredDoor(13, 17))
-                            hasEnteredDoor = true;
+                            {
+                        
+                            hasEnteredDoor = true;  
+                            DeathState = DiedTransitionState.None; 
+                            }
                         return;
                     }
                     else

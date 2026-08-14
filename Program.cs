@@ -3,6 +3,7 @@ using Raylib_cs;
 
 namespace PacManGame
 {
+    enum LevelTransitionState { None, LevelEnding, LevelStarting }
     class Program
     {
         const int TileSize = 8;
@@ -11,7 +12,8 @@ namespace PacManGame
         static bool isPaused = true;
         static bool isFrozen;
         static bool ResetGame;
-
+        
+        static LevelTransitionState transitionState = LevelTransitionState.None;
         static int PacManAnimFrameIndex;
         static int GhostAnimFrameIndex;
         static bool playDeathAnim;
@@ -68,7 +70,7 @@ namespace PacManGame
                             ResetGame = false;
                             GameReset(pacman);
                         }
-                        bool anyGhostEaten = ghosts.Any(g => g.HasDied);
+                        bool anyGhostEaten = ghosts.Any(g => g.DeathState.Equals(DiedTransitionState.JustDied));
                         if (anyGhostEaten)
                         {
                             TimerManager.Resume(TimerType.GhostEaten);
@@ -76,7 +78,8 @@ namespace PacManGame
                             {
                                 TimerManager.PauseAndReset(TimerType.GhostEaten);
                                 foreach (var g in ghosts)
-                                    g.HasDied = false;
+                                if (g.DeathState.Equals(DiedTransitionState.JustDied))
+                                     g.DeathState = DiedTransitionState.LateDied;
                                 anyGhostEaten = false;   // pause is over as of this frame
                             }
             
@@ -93,21 +96,35 @@ namespace PacManGame
                         HandleInput(pacman);
                         pacman.UpdateLoop(isFrozen);
                         if (board1.RemainingDots == 0)
-                        {   PacManAnimFrameIndex = 2;
-                            TimerManager.Resume(TimerType.LevelEnd);
-                            if (TimerManager.IsDone(TimerType.LevelEnd))
                             {
-                                TimerManager.PauseAndReset(TimerType.LevelEnd);
-                                TimerManager.Resume(TimerType.LevelStart);
-                            if (TimerManager.IsDone(TimerType.LevelStart))
-                            {
-                                pacman.ResetForNextLevel();
-                                TimerManager.PauseAndReset(TimerType.LevelStart);
-                                TimerManager.ResumeAndReset(TimerType.GameStart);
+                                PacManAnimFrameIndex = 2;
+                                switch (transitionState)
+                                { 
+                                    case LevelTransitionState.None:
+                                        transitionState = LevelTransitionState.LevelEnding;
+                                        TimerManager.ResumeAndReset(TimerType.LevelEnd);
+                                        break;
+
+                                    case LevelTransitionState.LevelEnding:
+                                        if (TimerManager.IsDone(TimerType.LevelEnd))
+                                        {
+                                            TimerManager.PauseAndReset(TimerType.LevelEnd);
+                                            TimerManager.ResumeAndReset(TimerType.LevelStart);
+                                            transitionState = LevelTransitionState.LevelStarting;
+                                        }
+                                        break;
+
+                                    case LevelTransitionState.LevelStarting:
+                                        if (TimerManager.IsDone(TimerType.LevelStart))
+                                        {
+                                            TimerManager.PauseAndReset(TimerType.LevelStart);
+                                            pacman.ResetForNextLevel();
+                                            TimerManager.ResumeAndReset(TimerType.GameStart);
+                                            transitionState = LevelTransitionState.None;
+                                        }
+                                        break;
+                                }
                             }
-                                
-                            }
-                        }
                         if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
                             PacManAnimFrameIndex = 1;
 
@@ -215,7 +232,7 @@ namespace PacManGame
 
                         if (tile.HasDot())
                             Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
-                        else if (tile.HasPowerPellet() && TimerManager.IsRunning(TimerType.PelletAnim))
+                        else if (tile.HasPowerPellet() && IsPelletVisible())
                             Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
                         else
                             Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
@@ -308,7 +325,7 @@ namespace PacManGame
                 float screenY = ghost.PixelPosY * DrawScale;
                 float size = TileSize * DrawScale * 2.0f; 
                 Rectangle src;
-                if (ghost.HasDied)
+                if (ghost.DeathState.Equals(DiedTransitionState.JustDied))
                     src = Sprites.GhostPointsSelector(ghost.PacMan.EatenGhostsCounter);
                 else if (ghost.CurrentMode.Equals(ModeType.Dead))
                     src = Sprites.GhostDeadSelector(ghost.direction);
@@ -413,5 +430,11 @@ namespace PacManGame
                 TimerManager.ResetTimer(TimerType.GhostAnim);
             }
         }
+        static bool IsPelletVisible()
+            {
+                int value = TimerManager.GetValue(TimerType.PelletAnim);
+                const int halfPeriod = 15; // frames per on/off phase — tune to taste
+                return (value / halfPeriod) % 2 == 0;
+            }
     }
 }
