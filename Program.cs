@@ -8,8 +8,6 @@ namespace PacManGame
     {
         const int TileSize = 8;
         const float DrawScale = 3f;
-
-        static bool isPaused = true;
         static bool isFrozen;
         static bool ResetGame;
         
@@ -60,11 +58,6 @@ namespace PacManGame
 
             while (!Raylib.WindowShouldClose())
             {
-                if (Raylib.IsKeyPressed(KeyboardKey.P))
-                    isPaused = !isPaused;
-
-                if (!isPaused)
-                    {
                         if (ResetGame)
                         {
                             ResetGame = false;
@@ -158,7 +151,7 @@ namespace PacManGame
 
                         timer.UpdateTimer(isFrozen);
                         TimerManager.Update();
-                    }
+        
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
@@ -168,10 +161,8 @@ namespace PacManGame
                     DrawGhosts(ghosts);
                 if (!TimerManager.IsRunning(TimerType.StartTimer) && TimerManager.IsPaused(TimerType.GameOver))
                     DrawPacMan(pacman);
-                if (isPaused)
-                    DrawPauseOverlay();
                 DrawAllMessages();
-                DrawMessage(ScreenMessages.GetScore(board1.Score,26,1),TextColor.White);
+                DrawMessage(ScreenMessages.GetScore(board1.Score,3,1),TextColor.White);
                 DrawMessage(ScreenMessages.GetScore(board1.Score,12,1),TextColor.White);
                 DrawBottom(pacman.LIVES, board1.LEVEL);
                 Raylib.EndDrawing();
@@ -259,26 +250,6 @@ namespace PacManGame
                 
                 Raylib.DrawTexturePro(textSheet, src, dest, origin, 0f, Color.White);
             }
-        }
-
-        static void DrawPauseOverlay()
-        {
-            int screenWidth = Raylib.GetScreenWidth();
-            int screenHeight = Raylib.GetScreenHeight();
-            Color overlayColor = new Color(0, 0, 0, 180);
-            Raylib.DrawRectangle(0, 0, screenWidth, screenHeight, overlayColor);
-            string pauseText = "PAUSED";
-            string resumeText = "Press 'P' to Resume";
-            int fontSize = 60;
-            int textWidth = Raylib.MeasureText(pauseText, fontSize);
-            int textX = (screenWidth - textWidth) / 2;
-            int textY = (screenHeight / 2) - 60;
-            Raylib.DrawText(pauseText, textX, textY, fontSize, Color.Yellow);
-            fontSize = 30;
-            textWidth = Raylib.MeasureText(resumeText, fontSize);
-            textX = (screenWidth - textWidth) / 2;
-            textY = (screenHeight / 2) + 20;
-            Raylib.DrawText(resumeText, textX, textY, fontSize, Color.White);
         }
         
         static void DrawFruit(Fruit fruit, int level)
