@@ -1,4 +1,5 @@
 using System.ComponentModel.Design;
+using Raylib_cs;
 
 namespace PacManGame
 {
@@ -15,6 +16,8 @@ namespace PacManGame
         public int FreezeFramesRemaining;
         public bool HasDied;
         public bool HasExtraLife;
+        public Vector2D PreviousDirection;
+        public int JustTurned;
         public PacMan(int x, int y, Board board, Fruit fruit) : base(x, y, board)
         {
             this.Initialize();
@@ -37,12 +40,14 @@ namespace PacManGame
             Fruit.Update();
             CheckSpeed();
             Move(Frozen);
-            CheckConsumables();
+            // CheckConsumables();
         }
         public void Move(bool Frozen)
         {
             if (Frozen)
                 return;
+            if (JustTurned > 0)
+                JustTurned--;  
             int moveCount = GetStepsThisTick();
             for (int i = 0; i < moveCount; i++)
             {
@@ -66,6 +71,7 @@ namespace PacManGame
                 else
                     PixelPosX = newPixelX;
                 }
+                CheckConsumables();
             }
         }
         public void CheckFreezeFrames()
@@ -74,15 +80,22 @@ namespace PacManGame
         }
 
         public void DecideDirection()
-        {
-            if (bufferDirection.Equals(Vector2D.Zero))
-                return;
-            if (IsValidMove(bufferDirection))
             {
-                ChangeDirection(bufferDirection);
-                ChangeBufferDirection(Vector2D.Zero);
+                if (bufferDirection.Equals(Vector2D.Zero))
+                    return;
+                if (IsValidMove(bufferDirection))
+                {
+                    bool isCornerTurn = !bufferDirection.Equals(direction)
+                                    && !bufferDirection.Equals(direction.Reverse());
+                    if (isCornerTurn)
+                    {
+                        PreviousDirection = direction;
+                        JustTurned = 5;
+                    }
+                    ChangeDirection(bufferDirection);
+                    ChangeBufferDirection(Vector2D.Zero);
+                }
             }
-        }
         public void ChangeBufferDirection(Vector2D bufferDirection)
         {
             this.bufferDirection = bufferDirection;
@@ -112,6 +125,7 @@ namespace PacManGame
                 {
                     if (ghost.CurrentMode.Equals(ModeType.Fright))
                     {
+                        SoundManager.Play(SfxType.EatGhost);                
                         ghost.DeathState = DiedTransitionState.JustDied;
                         ghost.UpdateMode(ModeType.Dead);
                         ghost.UpdateGhostHouseState(GhostHouseState.Enter);
@@ -127,6 +141,7 @@ namespace PacManGame
                         HasDied = true;
                         
                     }
+                    break;
                 }
             }
         }
@@ -175,7 +190,7 @@ namespace PacManGame
                     if (!ghost.CurrentMode.Equals(ModeType.Dead))
                         ghost.UpdateMode(ModeType.Fright);
                 }
-                board.UpdatePowerScore();
+                board.UpdatePowerScore(); 
             }
             else if (tile.HasDot())
             {
@@ -183,18 +198,21 @@ namespace PacManGame
                 FreezeFramesRemaining = 1;
                 EatenDotCounter++;
                 board.UpdateDotScore();
+                SoundManager.PlayWaka();
             }
             else if (Fruit.IsActive())
             {
                 int pixelDistX =  Math.Abs(this.PixelPosX - Fruit.PixelPosX);
                 if (pixelDistX <= board.TileWidth / 2 && PixelPosY == Fruit.PixelPosY)
                 {
+                    SoundManager.Play(SfxType.EatFruit);
                     Fruit.SetInActive(true);
                     board.UpdateFruitScore();
                 }
             }
             if (board.Score >= 10000 && !HasExtraLife)
             {
+                SoundManager.Play(SfxType.ExtraLife);
                 LIVES++;
                 HasExtraLife = true;
             }

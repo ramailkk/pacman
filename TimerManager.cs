@@ -7,13 +7,11 @@ namespace PacManGame
         StartTimer,         // "PLAYER ONE" message display
         PacManDeath,        // Pac-Man death animation duration
         GhostEaten,         // Ghost eaten animation/sound duration
-        
         // Animation timers
         PacManAnim,         // Pac-Man animation frame switching
         GhostAnim,          // Ghost animation frame switching
         PelletAnim,         // Power pellet blinking animation
         BufferFrames,       // Input buffer frames
-        
         // Level/Gameplay timers
         LevelStart,         // Level start delay
         GameOver,
@@ -26,19 +24,18 @@ namespace PacManGame
         private static Dictionary<TimerType, int> maxValues = new();
         private static Dictionary<TimerType, bool> paused = new();
         private static HashSet<TimerType> autoPause = new();
-        
-        // Default timer durations (in frames at 60 FPS)
+        private static readonly HashSet<TimerType> timersThatStopSiren = new();
         private static readonly Dictionary<TimerType, int> DefaultDurations = new()
         {
-            { TimerType.GameStart, 120 },      
-            { TimerType.StartTimer, 100 },     
+            { TimerType.GameStart, 240 },      
+            { TimerType.StartTimer, 120 },     
             { TimerType.PacManDeath, 60 },     
             { TimerType.GhostEaten, 60 },      
-            { TimerType.PacManAnim, 3 },       
+            { TimerType.PacManAnim, 15 },       
             { TimerType.GhostAnim, 3 },        
             { TimerType.PelletAnim, 60 }, 
             { TimerType.LevelEnd , 120},   
-            { TimerType.LevelStart, 300 },
+            { TimerType.LevelStart, 260 },
             { TimerType.GameOver, 300 },      
         };
         
@@ -48,17 +45,25 @@ namespace PacManGame
             {
                 SetTimer(kvp.Key, kvp.Value);
             }
-            
+            foreach (var id in timers.Keys.ToList())
+            {
+                timersThatStopSiren.Add(id);
+            }
             // Initially pause these timers until needed
             Pause(TimerType.GhostEaten);
             Pause(TimerType.PacManDeath);
             Pause(TimerType.LevelStart);
             Pause(TimerType.GameOver);
             Pause(TimerType.LevelEnd);
+            
             // Animation timers should loop, not auto-pause
             autoPause.Remove(TimerType.PacManAnim);
             autoPause.Remove(TimerType.GhostAnim);
             autoPause.Remove(TimerType.PelletAnim);
+            timersThatStopSiren.Remove(TimerType.PacManAnim);
+            timersThatStopSiren.Remove(TimerType.GhostAnim);
+            timersThatStopSiren.Remove(TimerType.PelletAnim);
+
         }
         
         public static void SetTimer(TimerType id, int frames)
@@ -66,34 +71,53 @@ namespace PacManGame
             timers[id] = frames;
             maxValues[id] = frames;
             paused[id] = false;
-            autoPause.Add(id); // By default, auto-pause when reaches 0
+            timersThatStopSiren.Add(id);
+            autoPause.Add(id);
         }
         
         public static void Update()
         {
+            bool shouldStopSiren = false;
             foreach (var id in timers.Keys.ToList())
             {
                 if (paused[id]) continue;
-                
+
                 if (timers[id] > 0)
                 {
                     timers[id]--;
-                    
-                    // Auto-pause when reaches 0
                     if (timers[id] == 0 && autoPause.Contains(id))
                         paused[id] = true;
+                    if (timersThatStopSiren.Contains(id) && timers[id] > 0)
+                    {
+                        Console.WriteLine(id);
+                        shouldStopSiren = true;
+                    }
+                    Console.WriteLine("Hello");
                 }
             }
+            if (shouldStopSiren)
+                SoundManager.StopSiren();
+
+        }
+        
+        public static bool ShouldStopSiren()
+        {
+            foreach (var id in timersThatStopSiren)
+            {
+                if (IsRunning(id))
+                    return true;
+            }
+            return false;
         }
         
         public static bool IsRunning(TimerType id) => timers[id] > 0;
         public static bool IsDone(TimerType id) => timers[id] <= 0;
         public static int GetValue(TimerType id) => timers[id];
-        
+
         public static void ResetTimer(TimerType id)
         {
             if (maxValues.TryGetValue(id, out int max))
-            timers[id] = max;
+                timers[id] = max;
         }
         
         public static void ResetTimer(TimerType id, int newValue)
@@ -105,11 +129,13 @@ namespace PacManGame
         public static void Pause(TimerType id) => paused[id] = true;
         public static void Resume(TimerType id) => paused[id] = false;
         public static bool IsPaused(TimerType id) => paused[id];
+        
         public static void PauseAndReset(TimerType id)
         {
             Pause(id);
             ResetTimer(id);
         }
+        
         public static void ResumeAndReset(TimerType id)
         {
             ResetTimer(id);

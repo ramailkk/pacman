@@ -10,7 +10,7 @@ namespace PacManGame
         const float DrawScale = 3f;
         static bool isFrozen;
         static bool ResetGame;
-        
+        static bool boardDrawnOnce;
         static LevelTransitionState transitionState = LevelTransitionState.None;
         static int PacManAnimFrameIndex;
         static int GhostAnimFrameIndex;
@@ -39,25 +39,25 @@ namespace PacManGame
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
             timer.SetCurrentLevel(board1.LEVEL);
-
+            boardDrawnOnce = false;
             TimerManager.Initialize();
-            
-           
+            SoundManager.Initialize();
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale);
 
             
             Raylib.InitWindow(screenWidth, screenHeight, "PacMan");
 
-            spriteSheet = Raylib.LoadTexture("assets/AllSprites.png");
-            emptyBoardSheet = Raylib.LoadTexture("assets/empty_board.png");
-            fullBoardSheet = Raylib.LoadTexture("assets/full_board.png");
-            textSheet = Raylib.LoadTexture("assets/text.png");
-            whiteSheet = Raylib.LoadTexture("assets/white_board.png");
+            spriteSheet = Raylib.LoadTexture("assets/sprites/AllSprites.png");
+            emptyBoardSheet = Raylib.LoadTexture("assets/sprites/empty_board.png");
+            fullBoardSheet = Raylib.LoadTexture("assets/sprites/full_board.png");
+            textSheet = Raylib.LoadTexture("assets/sprites/text.png");
+            whiteSheet = Raylib.LoadTexture("assets/sprites/white_board.png");
             Raylib.SetTargetFPS(60);
-
+            SoundManager.Play(SfxType.Start);
             while (!Raylib.WindowShouldClose())
             {
+                SoundManager.UpdateSiren();                
                         if (ResetGame)
                         {
                             ResetGame = false;
@@ -130,8 +130,10 @@ namespace PacManGame
                         if (pacman.HasDied)
                         {
                             TimerManager.Resume(TimerType.PacManDeath);
+                            // SoundManager.Play(SfxType.Death_0);
                             if (TimerManager.IsDone(TimerType.PacManDeath))
                         {
+                            SoundManager.Play(SfxType.Death_0);
                             TimerManager.PauseAndReset(TimerType.PacManDeath);
                             PacManAnimFrameIndex = 0;
                             playDeathAnim = true;
@@ -155,7 +157,10 @@ namespace PacManGame
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
-                DrawBoard(board1);
+                if (boardDrawnOnce)
+                    DrawBoardOnce(board1);
+                else
+                    DrawBoard(board1);
                 DrawFruit(fruit, board1.LEVEL);
                 if (!playDeathAnim && !TimerManager.IsRunning(TimerType.StartTimer) && TimerManager.IsPaused(TimerType.LevelStart) && TimerManager.IsPaused(TimerType.GameOver))
                     DrawGhosts(ghosts);
@@ -230,6 +235,28 @@ namespace PacManGame
                     }
                 }
             }
+
+            static void DrawBoardOnce(Board board)
+            {
+                for (int row = 3; row < board.Grid.GetLength(0) - 2; row++)
+                {
+                    for (int col = 0; col < board.Grid.GetLength(1); col++)
+                    {
+                        Tile tile = board.Grid[row, col];
+                        float x = col * TileSize * DrawScale;
+                        float y = row * TileSize * DrawScale;
+                        float size = TileSize * DrawScale;
+                        Rectangle src = new Rectangle(col * board.TileHeight, (row - 3) * board.TileWidth, board.TileWidth, board.TileHeight);
+                        Rectangle dest = new Rectangle(x, y, size, size);
+                        Vector2 origin = Vector2.Zero;
+
+                        if (tile.HasDot())
+                            Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
+                        else
+                            Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
+                    }
+                }
+            }
         static void DrawMessage(Dictionary<(int col, int row), char> message, TextColor color)
         {
             foreach (var kvp in message)
@@ -270,21 +297,37 @@ namespace PacManGame
         }
         
         static void DrawPacMan(PacMan pacman)
-        {
-            float screenX = pacman.PixelPosX * DrawScale;
-            float screenY = pacman.PixelPosY * DrawScale;
-            float size = TileSize * DrawScale * 2.0f;
-            Rectangle src;
-            if (pacman.IsGhostDead())
-                src = new Rectangle(0, 0, 0, 0);
-            else if (!playDeathAnim)
-                src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
-            else
-                src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
-            Rectangle dest = new Rectangle(screenX, screenY, size, size);
-            Vector2 origin = new Vector2(size / 2, size / 2);
-            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
-        }
+            {
+                float screenX = pacman.PixelPosX * DrawScale;
+                float screenY = pacman.PixelPosY * DrawScale;
+                float size = TileSize * DrawScale * 2.0f;
+                Rectangle src;
+                float rotation = 0f;
+
+                if (pacman.IsGhostDead())
+                    src = new Rectangle(0, 0, 0, 0);
+                else if (!playDeathAnim)
+                {
+                    src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
+                    if (pacman.JustTurned > 0)
+                {
+                        rotation = GetTurnTiltAngle(pacman.PreviousDirection, pacman.direction);   
+                }
+                }
+                else
+                    src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
+
+                Rectangle dest = new Rectangle(screenX, screenY, size, size);
+                Vector2 origin = new Vector2(size / 2, size / 2);
+                Raylib.DrawTexturePro(spriteSheet, src, dest, origin, rotation, Color.White);
+            }
+
+            static float GetTurnTiltAngle(Vector2D from, Vector2D to)
+            {
+                const float tiltDegrees = 25f; // tune to taste — 45 looks drunk, 10-25 reads as a lean
+                int cross = from.X * to.Y - from.Y * to.X;
+                return cross > 0 ? tiltDegrees : -tiltDegrees;
+            }
 
 
 
@@ -378,6 +421,7 @@ namespace PacManGame
         public static void GameReset(PacMan pacMan)
         {
             playDeathAnim = false;
+            SoundManager.Play(SfxType.Death_1);
             isFrozen = false;
             PacManAnimFrameIndex = Sprites.PacmanDirectionList[0].Count - 1;
             TimerManager.ResumeAndReset(TimerType.GameStart);
