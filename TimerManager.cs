@@ -30,7 +30,7 @@ namespace PacManGame
             { TimerType.StartTimer, 120 },
             { TimerType.PacManDeath, 60 },
             { TimerType.GhostEaten, 60 },
-            { TimerType.PacManAnim, 15 },
+            { TimerType.PacManAnim, 3 },
             { TimerType.GhostAnim, 3 },
             { TimerType.PelletAnim, 60 },
             { TimerType.LevelEnd , 120},

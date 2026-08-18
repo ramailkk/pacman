@@ -154,9 +154,7 @@ namespace PacManGame
                     else if (!ghost.CurrentMode.Equals(ModeType.Fright) && !ghost.CurrentMode.Equals(ModeType.Dead) && !HasDied)
                     {
                         LIVES--;
-                        Fruit.SetInActive(false);
                         HasDied = true;
-
                     }
                     break;
                 }

@@ -87,25 +87,22 @@ namespace PacManGame
             int newPixelX = PixelPosX + currentDirection.X;
             int newPixelY = PixelPosY + currentDirection.Y;
             (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
+            
             (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
             Tile targetTile = board.Grid[tileY, tileX];
 
             if (!IsTileWalkable(targetTile))
                 return false;
-
-            // Only run the extra look-ahead when actually turning (changing axis),
-            // to stop the sprite visually clipping a corner mid-turn.
-            bool isTurning = !currentDirection.Equals(direction);
-            if (isTurning)
-            {
-                int outlinePixelX = newPixelX + (board.TileWidth / 2 * currentDirection.X);
-                int outlinePixelY = newPixelY + (board.TileHeight / 2 * currentDirection.Y);
-                (outlinePixelX, outlinePixelY) = CheckForTunnel(outlinePixelX, outlinePixelY);
-                (int outlineTileX, int outlineTileY) = ConvertPixelToTile(outlinePixelX, outlinePixelY);
-                Tile outlineTile = board.Grid[outlineTileY, outlineTileX];
-                if (!IsTileWalkable(outlineTile))
-                    return false;
-            }
+            
+            (int StartingTileX, int StartingTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+            (int CenterX, int CenterY) = ConvertTileToPixel(StartingTileX,StartingTileY);
+                if (!IsValidTile(StartingTileX,StartingTileY, currentDirection)){
+                    // check if its a turn
+                    if (!currentDirection.Equals(direction.Reverse()) && !currentDirection.Equals(direction))
+                        return false;
+                    if ((PixelPosX, PixelPosY) == (CenterX,CenterY))
+                        return false;
+                }
 
             return true;
         }

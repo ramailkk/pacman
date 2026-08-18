@@ -430,7 +430,7 @@ namespace PacManGame
             TimerManager.Resume(TimerType.GhostAnim);
 
             if (!playDeathAnim)
-                IncrementPacManTimers(Sprites.PacmanDirectionList[0].Count, 2);
+                IncrementPacManTimers(Sprites.PacmanDirectionList[0].Count, 3);
             else
                 IncrementPacManTimers(Sprites.PacManDead.Count, 10);
 
