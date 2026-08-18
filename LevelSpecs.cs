@@ -90,7 +90,7 @@ namespace PacManGame
             FruitType.Key,        // level 20
             FruitType.Key,        // level 21+
         };
-        public static readonly int[] BonusPoints ={ 100, 300, 500, 500, 700, 700, 1000, 1000, 2000, 2000,3000, 3000, 5000};
+        public static readonly int[] BonusPoints = { 100, 300, 500, 500, 700, 700, 1000, 1000, 2000, 2000, 3000, 3000, 5000 };
         public static int GetEntry(int Level, int[] array)
         {
             Level = Math.Min(Level, array.Length) - 1;

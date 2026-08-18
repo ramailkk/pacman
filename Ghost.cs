@@ -49,7 +49,7 @@ namespace PacManGame
         public GhostType ghostType;
         public Ghost Blinky;
         public bool HasDied;
-        
+
         public DiedTransitionState DeathState;
         // movement flags
         public bool justDied;
@@ -115,24 +115,50 @@ namespace PacManGame
             int moveCount = GetStepsThisTick();
             for (int i = 0; i < moveCount; i++)
             {
-            // Deal with anything related to Home States First
-            if (HouseState.Equals(GhostHouseState.Home))
-            {
-                if (PacMan.EatenDotCounter >= DotLimit && (PixelPosX, PixelPosY) == GetStartCords())
+                // Deal with anything related to Home States First
+                if (HouseState.Equals(GhostHouseState.Home))
                 {
-                    HouseState = GhostHouseState.Leave;
+                    if (PacMan.EatenDotCounter >= DotLimit && (PixelPosX, PixelPosY) == GetStartCords())
+                    {
+                        HouseState = GhostHouseState.Leave;
+                    }
+                    else
+                    {
+                        (int tileX, int tileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+                        direction = GhostLookAhead(tileX, tileY);
+                        (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
+                    }
+                    return;
                 }
-                else
+                else if (HouseState.Equals(GhostHouseState.Leave))
                 {
-                    (int tileX, int tileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
-                    direction = GhostLookAhead(tileX,tileY);
-                    (PixelPosX, PixelPosY) = (PixelPosX + direction.X, PixelPosY + direction.Y);
+                    if (!hasAlignedToDoor)
+                    {
+                        Vector2D ghostDirection = ghostType switch
+                        {
+                            GhostType.Inky => Vector2D.Right,
+                            GhostType.Clyde => Vector2D.Left,
+                            _ => Vector2D.Up // Blinky/Pinky already aligned in X
+                        };
+
+                        if (IsInsideDoor(ghostDirection, 13, 17))
+                            hasAlignedToDoor = true; // lock it in — never re-check alignment again this trip
+                    }
+                    else
+                    {
+                        if (HasExitedDoor(13, 14))
+                        {
+                            PixelPosX -= board.TileWidth / 2;
+                            direction = Vector2D.Left;
+                            pendingDirection = Vector2D.Zero;
+                            pendingTileX = pendingTileY = int.MinValue;
+                            hasAlignedToDoor = false; // reset for next time this ghost re-enters the house
+                            HouseState = GhostHouseState.Normal;
+                        }
+                    }
+                    return;
                 }
-                return;
-            }
-            else if (HouseState.Equals(GhostHouseState.Leave))
-            {
-                if (!hasAlignedToDoor)
+                else if (HouseState.Equals(GhostHouseState.Enter))
                 {
                     Vector2D ghostDirection = ghostType switch
                     {
@@ -141,93 +167,67 @@ namespace PacManGame
                         _ => Vector2D.Up // Blinky/Pinky already aligned in X
                     };
 
-                    if (IsInsideDoor(ghostDirection, 13, 17))
-                        hasAlignedToDoor = true; // lock it in — never re-check alignment again this trip
-                }
-                else
-                {
-                    if (HasExitedDoor(13, 14))
+                    if (!hasAlignedToDoor)
                     {
-                        PixelPosX -= board.TileWidth / 2;
-                        direction = Vector2D.Left;
-                        pendingDirection = Vector2D.Zero;
-                        pendingTileX = pendingTileY = int.MinValue;
-                        hasAlignedToDoor = false; // reset for next time this ghost re-enters the house
-                        HouseState = GhostHouseState.Normal;
-                    }
-                }
-                return;
-            }
-            else if (HouseState.Equals(GhostHouseState.Enter))
-            {
-                Vector2D ghostDirection = ghostType switch
-                {
-                    GhostType.Inky => Vector2D.Right,
-                    GhostType.Clyde => Vector2D.Left,
-                    _ => Vector2D.Up // Blinky/Pinky already aligned in X
-                };
-
-                if (!hasAlignedToDoor)
-                {
-                    (int DoortileX, int DoortileY) = modeTargetTiles[ModeType.Dead];
-                    if (IsOutsideDoor(DoortileX, DoortileY))
-                    {
-                        hasAlignedToDoor = true;
-                        return;
-                    }
-                }
-                else
-                {
-                    if (!hasEnteredDoor)
-                    {
-                        if (HasEnteredDoor(13, 17))
-                            {
-                        
-                            hasEnteredDoor = true;  
-                            DeathState = DiedTransitionState.None; 
-                            }
-                        return;
-                    }
-                    else
-                    {
-                        if (IsAtStartingPositions(ghostDirection.Reverse()))
+                        (int DoortileX, int DoortileY) = modeTargetTiles[ModeType.Dead];
+                        if (IsOutsideDoor(DoortileX, DoortileY))
                         {
-                            hasEnteredDoor = false;
-                            hasAlignedToDoor = false;
-                            CurrentMode = PacMan.timer.GetCurrentMode();
-                            if (this.ghostType.Equals(GhostType.Blinky))
-                                HouseState = GhostHouseState.Leave;
-                            else
-                                HouseState = GhostHouseState.Home;
-                            this.CurrentMode = PacMan.timer.GlobalMode;
+                            hasAlignedToDoor = true;
                             return;
                         }
                     }
+                    else
+                    {
+                        if (!hasEnteredDoor)
+                        {
+                            if (HasEnteredDoor(13, 17))
+                            {
 
-                    return;
+                                hasEnteredDoor = true;
+                                DeathState = DiedTransitionState.None;
+                            }
+                            return;
+                        }
+                        else
+                        {
+                            if (IsAtStartingPositions(ghostDirection.Reverse()))
+                            {
+                                hasEnteredDoor = false;
+                                hasAlignedToDoor = false;
+                                CurrentMode = PacMan.timer.GetCurrentMode();
+                                if (this.ghostType.Equals(GhostType.Blinky))
+                                    HouseState = GhostHouseState.Leave;
+                                else
+                                    HouseState = GhostHouseState.Home;
+                                this.CurrentMode = PacMan.timer.GlobalMode;
+                                return;
+                            }
+                        }
+
+                        return;
+                    }
                 }
-            }
 
-            if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
-            {
-                modeTargetTiles[ModeType.Chase] = CalculateTargetTileForEachGhost();
-                // Arrived at the tile a previous decision was made for — commit it now
-                if (TileX == pendingTileX && TileY == pendingTileY && !pendingDirection.Equals(Vector2D.Zero))
-                    direction = pendingDirection;
-                // Pre-decide the turn for the *next* tile, to be committed when we get there
-                int nextTileX = TileX + direction.X;
-                int nextTileY = TileY + direction.Y;
-                (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX, nextTileY);
-                if (!CurrentMode.Equals(ModeType.Fright))
-                    pendingDirection = NormalLookAhead(nextTileX, nextTileY);
-                else
-                    pendingDirection = FrightLookAhead(nextTileX, nextTileY);
-                pendingTileX = nextTileX;
-                pendingTileY = nextTileY;
-            }
-            // Safety net: never step with an unresolved/dead-end direction
-            if (!direction.Equals(Vector2D.Zero))
-                (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
+                if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
+                {
+                    modeTargetTiles[ModeType.Chase] = CalculateTargetTileForEachGhost();
+                    // Arrived at the tile a previous decision was made for — commit it now
+                    if (TileX == pendingTileX && TileY == pendingTileY && !pendingDirection.Equals(Vector2D.Zero))
+                        direction = pendingDirection;
+                    // Pre-decide the turn for the *next* tile, to be committed when we get there
+                    int nextTileX = TileX + direction.X;
+                    int nextTileY = TileY + direction.Y;
+                    (nextTileX, nextTileY) = CheckForTunnelTile(nextTileX, nextTileY);
+                    if (!CurrentMode.Equals(ModeType.Fright))
+                        pendingDirection = NormalLookAhead(nextTileX, nextTileY);
+                    else
+                        pendingDirection = FrightLookAhead(nextTileX, nextTileY);
+                    pendingTileX = nextTileX;
+                    pendingTileY = nextTileY;
+                }
+                // Safety net: never step with an unresolved/dead-end direction
+                if (!direction.Equals(Vector2D.Zero))
+                    (PixelPosX, PixelPosY) = CheckForTunnel(PixelPosX + direction.X, PixelPosY + direction.Y);
             }
         }
 
@@ -360,7 +360,7 @@ namespace PacManGame
             if (!ghostType.Equals(GhostType.Blinky))
             {
 
-                if (IsValidTile(tileX, tileY,direction))
+                if (IsValidTile(tileX, tileY, direction))
                     return direction;
                 else
                     return direction.Reverse();
@@ -392,7 +392,7 @@ namespace PacManGame
             if (mode.Equals(ModeType.Scatter) && isCruiseElroyActivated())
                 mode = ModeType.Chase;
 
-                if (CurrentMode.Equals(ModeType.Dead) && mode.Equals(mode.Equals(ModeType.Fright)))
+            if (CurrentMode.Equals(ModeType.Dead) && mode.Equals(mode.Equals(ModeType.Fright)))
                 return;
             // Reversal logic
             if (CurrentMode.Equals(ModeType.Chase) && (mode.Equals(ModeType.Scatter) || mode.Equals(ModeType.Fright)))

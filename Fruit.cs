@@ -1,9 +1,9 @@
 namespace PacManGame
 {
-     public enum FruitType
-        {
-            Cherries, Strawberry, Peach, Apple, Grapes, Galaxian, Bell, Key
-        }
+    public enum FruitType
+    {
+        Cherries, Strawberry, Peach, Apple, Grapes, Galaxian, Bell, Key
+    }
     public class Fruit
     {
         public int PixelPosX;
@@ -19,7 +19,7 @@ namespace PacManGame
         {
             Board = board;
             (PixelPosX, PixelPosY) = ConvertTileToPixel(tilePosX, tilePosY);
-            PixelPosX += Board.TileWidth/2;
+            PixelPosX += Board.TileWidth / 2;
             isActive = false;
             FruitTimer = 0;
             random = new Random();

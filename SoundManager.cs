@@ -4,10 +4,8 @@ namespace PacManGame
 {
     public enum SfxType
     {
-        EatDot_0,
-        EatDot_1,
-        Death_0,
-        Death_1,
+        EatDot_0, EatDot_1,
+        Death_0, Death_1,
         EatGhost,
         EatFruit,
         ExtraLife,
@@ -16,14 +14,13 @@ namespace PacManGame
 
     public enum MusicType
     {
-        FirstSiren_0,
-        FirstSiren_1,
-        SecondSiren_0,
-        SecondSiren_1,
-        ThirdSiren_0,
-        ThirdSiren_1,
-        FourthSiren_0,
-        FourthSiren_1
+        Siren0,
+        Siren1,
+        Siren2,
+        Siren3,
+        Siren4,
+        Fright,
+        Eyes
     }
 
     public static class SoundManager
@@ -51,46 +48,25 @@ namespace PacManGame
             sounds[SfxType.Start] = Raylib.LoadSound("assets/sounds/start.wav");
 
             // Load music streams (sirens)
-            music[MusicType.FirstSiren_0] = Raylib.LoadMusicStream("assets/sounds/siren0.wav");
-            music[MusicType.FirstSiren_1] = Raylib.LoadMusicStream("assets/sounds/siren0_firstloop.wav");
-            music[MusicType.SecondSiren_0] = Raylib.LoadMusicStream("assets/sounds/siren1.wav");
-            music[MusicType.SecondSiren_1] = Raylib.LoadMusicStream("assets/sounds/siren1.firstloop.wav");
-            music[MusicType.ThirdSiren_0] = Raylib.LoadMusicStream("assets/sounds/siren2.wav");
-            music[MusicType.ThirdSiren_1] = Raylib.LoadMusicStream("assets/sounds/siren2.firstloop.wav");
-            music[MusicType.FourthSiren_0] = Raylib.LoadMusicStream("assets/sounds/siren3.wav");  // Fixed from siren0
-            music[MusicType.FourthSiren_1] = Raylib.LoadMusicStream("assets/sounds/siren3.firstloop.wav");  // Fixed from siren0
+            music[MusicType.Siren0] = Raylib.LoadMusicStream("assets/sounds/siren0_full.wav");
+            music[MusicType.Siren1] = Raylib.LoadMusicStream("assets/sounds/siren1.wav");
+            music[MusicType.Siren2] = Raylib.LoadMusicStream("assets/sounds/siren2_full.wav");
+            music[MusicType.Siren3] = Raylib.LoadMusicStream("assets/sounds/siren3_full.wav");
+            music[MusicType.Siren4] = Raylib.LoadMusicStream("assets/sounds/siren4_full.wav");
+            music[MusicType.Fright] = Raylib.LoadMusicStream("assets/sounds/fright_full.wav");
+            music[MusicType.Eyes] = Raylib.LoadMusicStream("assets/sounds/eyes_full.wav");
 
-            currentSirenType = MusicType.FirstSiren_0;
-            PlaySirenTest();
-        }
-
-        // Test method to play FirstSiren_0
-        public static void PlaySirenTest()
-        {
-            // Stop any currently playing siren
-            if (isSirenPlaying && currentSiren.HasValue)
-            {
-                Raylib.StopMusicStream(currentSiren.Value);
-                isSirenPlaying = false;
-            }
-
-            // Play the first siren
-            currentSiren = music[MusicType.FirstSiren_0];
-            currentSirenType = MusicType.FirstSiren_0;
-            Raylib.PlayMusicStream(currentSiren.Value);
-            isSirenPlaying = true;
         }
 
         public static void UpdateSiren()
         {
             if (isSirenPlaying && currentSiren.HasValue)
-            {
                 Raylib.UpdateMusicStream(currentSiren.Value);
-            }
         }
 
         public static void PlaySiren(MusicType type)
         {
+
             if (isSirenPlaying && currentSiren.HasValue && currentSirenType == type)
                 return;
 
@@ -99,7 +75,6 @@ namespace PacManGame
                 Raylib.StopMusicStream(currentSiren.Value);
                 isSirenPlaying = false;
             }
-
             // Play the new siren
             currentSiren = music[type];
             currentSirenType = type;

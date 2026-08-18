@@ -47,29 +47,29 @@ namespace PacManGame
             if (Frozen)
                 return;
             if (JustTurned > 0)
-                JustTurned--;  
+                JustTurned--;
             int moveCount = GetStepsThisTick();
             for (int i = 0; i < moveCount; i++)
             {
-            if (FreezeFramesRemaining > 0)
-            {
-                FreezeFramesRemaining--;
-                return;
-            }
-            DecideDirection();
-            // Calculate new pixel position based on direction
-            int newPixelX = PixelPosX + direction.X;
-            int newPixelY = PixelPosY + direction.Y;
-            (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
-            (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
+                if (FreezeFramesRemaining > 0)
+                {
+                    FreezeFramesRemaining--;
+                    return;
+                }
+                DecideDirection();
+                // Calculate new pixel position based on direction
+                int newPixelX = PixelPosX + direction.X;
+                int newPixelY = PixelPosY + direction.Y;
+                (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
+                (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
-            if (base.IsValidMove(direction))
-            {
-                (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX, tileY);
-                if (direction.X == 0)
-                    PixelPosY = newPixelY;
-                else
-                    PixelPosX = newPixelX;
+                if (base.IsValidMove(direction))
+                {
+                    (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX, tileY);
+                    if (direction.X == 0)
+                        PixelPosY = newPixelY;
+                    else
+                        PixelPosX = newPixelX;
                 }
                 CheckConsumables();
             }
@@ -80,22 +80,22 @@ namespace PacManGame
         }
 
         public void DecideDirection()
+        {
+            if (bufferDirection.Equals(Vector2D.Zero))
+                return;
+            if (IsValidMove(bufferDirection))
             {
-                if (bufferDirection.Equals(Vector2D.Zero))
-                    return;
-                if (IsValidMove(bufferDirection))
+                bool isCornerTurn = !bufferDirection.Equals(direction)
+                                && !bufferDirection.Equals(direction.Reverse());
+                if (isCornerTurn)
                 {
-                    bool isCornerTurn = !bufferDirection.Equals(direction)
-                                    && !bufferDirection.Equals(direction.Reverse());
-                    if (isCornerTurn)
-                    {
-                        PreviousDirection = direction;
-                        JustTurned = 5;
-                    }
-                    ChangeDirection(bufferDirection);
-                    ChangeBufferDirection(Vector2D.Zero);
+                    PreviousDirection = direction;
+                    JustTurned = 5;
                 }
+                ChangeDirection(bufferDirection);
+                ChangeBufferDirection(Vector2D.Zero);
             }
+        }
         public void ChangeBufferDirection(Vector2D bufferDirection)
         {
             this.bufferDirection = bufferDirection;
@@ -125,7 +125,7 @@ namespace PacManGame
                 {
                     if (ghost.CurrentMode.Equals(ModeType.Fright))
                     {
-                        SoundManager.Play(SfxType.EatGhost);                
+                        SoundManager.Play(SfxType.EatGhost);
                         ghost.DeathState = DiedTransitionState.JustDied;
                         ghost.UpdateMode(ModeType.Dead);
                         ghost.UpdateGhostHouseState(GhostHouseState.Enter);
@@ -139,7 +139,7 @@ namespace PacManGame
                         LIVES--;
                         Fruit.SetInActive(false);
                         HasDied = true;
-                        
+
                     }
                     break;
                 }
@@ -190,7 +190,7 @@ namespace PacManGame
                     if (!ghost.CurrentMode.Equals(ModeType.Dead))
                         ghost.UpdateMode(ModeType.Fright);
                 }
-                board.UpdatePowerScore(); 
+                board.UpdatePowerScore();
             }
             else if (tile.HasDot())
             {
@@ -202,7 +202,7 @@ namespace PacManGame
             }
             else if (Fruit.IsActive())
             {
-                int pixelDistX =  Math.Abs(this.PixelPosX - Fruit.PixelPosX);
+                int pixelDistX = Math.Abs(this.PixelPosX - Fruit.PixelPosX);
                 if (pixelDistX <= board.TileWidth / 2 && PixelPosY == Fruit.PixelPosY)
                 {
                     SoundManager.Play(SfxType.EatFruit);
@@ -219,9 +219,18 @@ namespace PacManGame
         }
         public bool IsGhostDead()
         {
-            foreach(var ghost in ghosts)
+            foreach (var ghost in ghosts)
             {
                 if (ghost.DeathState.Equals(DiedTransitionState.JustDied))
+                    return true;
+            }
+            return false;
+        }
+        public bool IsGhostRunningToHome()
+        {
+            foreach (var ghost in ghosts)
+            {
+                if (ghost.DeathState.Equals(DiedTransitionState.LateDied))
                     return true;
             }
             return false;

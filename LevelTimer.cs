@@ -10,7 +10,7 @@ public class LevelTimer
     public bool isBlue;
     public int CurrentLevel;
     public int[][] GlobalSchedule;
-    const int FlashHalfCycleFrames = 14; 
+    const int FlashHalfCycleFrames = 14;
 
     public List<Ghost> Ghosts;
     public LevelTimer(List<Ghost> ghosts)
@@ -41,26 +41,26 @@ public class LevelTimer
     {
         if (isFrozen)
             return;
-     if (FrightTimer > 0)
-    {
-        int flashCount = LevelSpecs.GetEntry(CurrentLevel, LevelSpecs.FlashCount);
-        int flashWindowFrames = flashCount * FlashHalfCycleFrames * 2;
-
-        if (FrightTimer <= flashWindowFrames)
+        if (FrightTimer > 0)
         {
-            int framesIntoFlash = flashWindowFrames - FrightTimer;
-            isBlue = (framesIntoFlash / FlashHalfCycleFrames) % 2 == 0;
-        }
-        else
-        {
-            isBlue = true; // solid blue outside the flash window
-        }
+            int flashCount = LevelSpecs.GetEntry(CurrentLevel, LevelSpecs.FlashCount);
+            int flashWindowFrames = flashCount * FlashHalfCycleFrames * 2;
 
-        FrightTimer--;
-        if (FrightTimer == 0)
-            UpdateAllGhostMode(GlobalMode);
-        return;
-    }
+            if (FrightTimer <= flashWindowFrames)
+            {
+                int framesIntoFlash = flashWindowFrames - FrightTimer;
+                isBlue = (framesIntoFlash / FlashHalfCycleFrames) % 2 == 0;
+            }
+            else
+            {
+                isBlue = true; // solid blue outside the flash window
+            }
+
+            FrightTimer--;
+            if (FrightTimer == 0)
+                UpdateAllGhostMode(GlobalMode);
+            return;
+        }
 
         if (ModeTimerIndex == GlobalSchedule[0].Length)
             return;
@@ -102,7 +102,7 @@ public class LevelTimer
     }
     public bool IsFrightMode()
     {
-        return FrightTimer > 0; 
+        return FrightTimer > 0;
     }
     public void SetCurrentLevel(int Level)
     {

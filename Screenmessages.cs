@@ -49,7 +49,7 @@ namespace PacManGame
             BuildMessage("CREDIT", 0, 35);
         public static readonly Dictionary<(int col, int row), char> ScoreLabel =
             BuildMessage("SCORE", 3, 1);
-    
+
         public static Dictionary<(int col, int row), char> GetScore(int score, int col, int row)
         {
             String scoreString = score.ToString();
@@ -57,7 +57,7 @@ namespace PacManGame
             {
                 col = 28 - scoreString.Length;
             }
-            return BuildMessage(scoreString, col, row);   
+            return BuildMessage(scoreString, col, row);
         }
     }
 }

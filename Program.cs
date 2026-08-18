@@ -45,7 +45,7 @@ namespace PacManGame
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
             int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale);
 
-            
+
             Raylib.InitWindow(screenWidth, screenHeight, "PacMan");
 
             spriteSheet = Raylib.LoadTexture("assets/sprites/AllSprites.png");
@@ -57,103 +57,108 @@ namespace PacManGame
             SoundManager.Play(SfxType.Start);
             while (!Raylib.WindowShouldClose())
             {
-                SoundManager.UpdateSiren();                
-                        if (ResetGame)
-                        {
-                            ResetGame = false;
-                            GameReset(pacman);
-                        }
-                        bool anyGhostEaten = ghosts.Any(g => g.DeathState.Equals(DiedTransitionState.JustDied));
-                        if (anyGhostEaten)
-                        {
-                            TimerManager.Resume(TimerType.GhostEaten);
-                            if (TimerManager.IsDone(TimerType.GhostEaten))
-                            {
-                                TimerManager.PauseAndReset(TimerType.GhostEaten);
-                                foreach (var g in ghosts)
-                                if (g.DeathState.Equals(DiedTransitionState.JustDied))
-                                     g.DeathState = DiedTransitionState.LateDied;
-                                anyGhostEaten = false;   // pause is over as of this frame
-                            }
-            
-                        }
-                        isFrozen = TimerManager.IsRunning(TimerType.GameStart)  
-                        || TimerManager.IsRunning(TimerType.StartTimer) 
-                        || playDeathAnim || anyGhostEaten || pacman.HasDied 
-                        || !TimerManager.IsPaused(TimerType.LevelStart) 
-                        || !TimerManager.IsPaused(TimerType.GameOver) 
-                        ||!TimerManager.IsPaused(TimerType.LevelEnd);
-
-                        // 2. Everyone uses that same, already-final isFrozen value.
-                        CanChangeAnimation();
-                        HandleInput(pacman);
-                        pacman.UpdateLoop(isFrozen);
-                        if (board1.RemainingDots == 0)
-                            {
-                                PacManAnimFrameIndex = 2;
-                                switch (transitionState)
-                                { 
-                                    case LevelTransitionState.None:
-                                        transitionState = LevelTransitionState.LevelEnding;
-                                        TimerManager.ResumeAndReset(TimerType.LevelEnd);
-                                        break;
-
-                                    case LevelTransitionState.LevelEnding:
-                                        if (TimerManager.IsDone(TimerType.LevelEnd))
-                                        {
-                                            TimerManager.PauseAndReset(TimerType.LevelEnd);
-                                            TimerManager.ResumeAndReset(TimerType.LevelStart);
-                                            transitionState = LevelTransitionState.LevelStarting;
-                                        }
-                                        break;
-
-                                    case LevelTransitionState.LevelStarting:
-                                        if (TimerManager.IsDone(TimerType.LevelStart))
-                                        {
-                                            TimerManager.PauseAndReset(TimerType.LevelStart);
-                                            pacman.ResetForNextLevel();
-                                            TimerManager.ResumeAndReset(TimerType.GameStart);
-                                            transitionState = LevelTransitionState.None;
-                                        }
-                                        break;
-                                }
-                            }
-                        if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
-                            PacManAnimFrameIndex = 1;
-
-                        foreach (var ghost in ghosts)
-                            ghost.Move(isFrozen);
-
-                        if (!playDeathAnim)
-                            pacman.CheckGhostCollisions();
-                        
-                        if (pacman.HasDied)
-                        {
-                            TimerManager.Resume(TimerType.PacManDeath);
-                            // SoundManager.Play(SfxType.Death_0);
-                            if (TimerManager.IsDone(TimerType.PacManDeath))
-                        {
-                            SoundManager.Play(SfxType.Death_0);
-                            TimerManager.PauseAndReset(TimerType.PacManDeath);
-                            PacManAnimFrameIndex = 0;
-                            playDeathAnim = true;
-                            pacman.HasDied = false;
-                        }
+                if (ResetGame)
+                {
+                    ResetGame = false;
+                    GameReset(pacman);
+                }
+                bool anyGhostEaten = ghosts.Any(g => g.DeathState.Equals(DiedTransitionState.JustDied));
+                if (anyGhostEaten)
+                {
+                    TimerManager.Resume(TimerType.GhostEaten);
+                    if (TimerManager.IsDone(TimerType.GhostEaten))
+                    {
+                        TimerManager.PauseAndReset(TimerType.GhostEaten);
+                        foreach (var g in ghosts)
+                            if (g.DeathState.Equals(DiedTransitionState.JustDied))
+                                g.DeathState = DiedTransitionState.LateDied;
+                        anyGhostEaten = false;   // pause is over as of this frame
                     }
-                        if (pacman.LIVES == 0 && !playDeathAnim && !pacman.HasDied)
-                        {
-                            TimerManager.Pause(TimerType.GameStart);
-                            TimerManager.Resume(TimerType.GameOver);
-                            if (TimerManager.IsDone(TimerType.GameOver))
-                            {
-                                TimerManager.PauseAndReset(TimerType.GameOver);
-                                return;   
-                            }
-                        }
 
-                        timer.UpdateTimer(isFrozen);
-                        TimerManager.Update();
-        
+                }
+                isFrozen = TimerManager.IsRunning(TimerType.GameStart)
+                || TimerManager.IsRunning(TimerType.StartTimer)
+                || playDeathAnim || anyGhostEaten || pacman.HasDied
+                || !TimerManager.IsPaused(TimerType.LevelStart)
+                || !TimerManager.IsPaused(TimerType.GameOver)
+                || !TimerManager.IsPaused(TimerType.LevelEnd);
+
+                MusicType currentMusic = DecideSiren(board1, pacman, timer);
+                if (isFrozen && !currentMusic.Equals(MusicType.Fright))
+                    SoundManager.StopSiren();
+                else
+                    SoundManager.PlaySiren(currentMusic);
+                SoundManager.UpdateSiren();
+                // 2. Everyone uses that same, already-final isFrozen value.
+                CanChangeAnimation();
+                HandleInput(pacman);
+                pacman.UpdateLoop(isFrozen);
+                if (board1.RemainingDots == 0)
+                {
+                    PacManAnimFrameIndex = 2;
+                    switch (transitionState)
+                    {
+                        case LevelTransitionState.None:
+                            transitionState = LevelTransitionState.LevelEnding;
+                            TimerManager.ResumeAndReset(TimerType.LevelEnd);
+                            break;
+
+                        case LevelTransitionState.LevelEnding:
+                            if (TimerManager.IsDone(TimerType.LevelEnd))
+                            {
+                                TimerManager.PauseAndReset(TimerType.LevelEnd);
+                                TimerManager.ResumeAndReset(TimerType.LevelStart);
+                                transitionState = LevelTransitionState.LevelStarting;
+                            }
+                            break;
+
+                        case LevelTransitionState.LevelStarting:
+                            if (TimerManager.IsDone(TimerType.LevelStart))
+                            {
+                                TimerManager.PauseAndReset(TimerType.LevelStart);
+                                pacman.ResetForNextLevel();
+                                TimerManager.ResumeAndReset(TimerType.GameStart);
+                                transitionState = LevelTransitionState.None;
+                            }
+                            break;
+                    }
+                }
+                if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
+                    PacManAnimFrameIndex = 1;
+
+                foreach (var ghost in ghosts)
+                    ghost.Move(isFrozen);
+
+                if (!playDeathAnim)
+                    pacman.CheckGhostCollisions();
+
+                if (pacman.HasDied)
+                {
+                    TimerManager.Resume(TimerType.PacManDeath);
+                    // SoundManager.Play(SfxType.Death_0);
+                    if (TimerManager.IsDone(TimerType.PacManDeath))
+                    {
+                        SoundManager.Play(SfxType.Death_0);
+                        TimerManager.PauseAndReset(TimerType.PacManDeath);
+                        PacManAnimFrameIndex = 0;
+                        playDeathAnim = true;
+                        pacman.HasDied = false;
+                    }
+                }
+                if (pacman.LIVES == 0 && !playDeathAnim && !pacman.HasDied)
+                {
+                    TimerManager.Pause(TimerType.GameStart);
+                    TimerManager.Resume(TimerType.GameOver);
+                    if (TimerManager.IsDone(TimerType.GameOver))
+                    {
+                        TimerManager.PauseAndReset(TimerType.GameOver);
+                        return;
+                    }
+                }
+
+                timer.UpdateTimer(isFrozen);
+                TimerManager.Update();
+
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
@@ -167,8 +172,8 @@ namespace PacManGame
                 if (!TimerManager.IsRunning(TimerType.StartTimer) && TimerManager.IsPaused(TimerType.GameOver))
                     DrawPacMan(pacman);
                 DrawAllMessages();
-                DrawMessage(ScreenMessages.GetScore(board1.Score,3,1),TextColor.White);
-                DrawMessage(ScreenMessages.GetScore(board1.Score,12,1),TextColor.White);
+                DrawMessage(ScreenMessages.GetScore(board1.Score, 3, 1), TextColor.White);
+                DrawMessage(ScreenMessages.GetScore(board1.Score, 12, 1), TextColor.White);
                 DrawBottom(pacman.LIVES, board1.LEVEL);
                 Raylib.EndDrawing();
             }
@@ -200,63 +205,85 @@ namespace PacManGame
         }
 
         static void DrawBoard(Board board)
+        {
+            bool levelStartActive = !TimerManager.IsPaused(TimerType.LevelStart);
+            int levelStartValue = TimerManager.GetValue(TimerType.LevelStart);
+
+            const int flashInterval = 15;
+            bool showWhite = (levelStartValue / flashInterval) % 2 == 0;
+
+            for (int row = 3; row < board.Grid.GetLength(0) - 2; row++)
             {
-                bool levelStartActive = !TimerManager.IsPaused(TimerType.LevelStart);
-                int levelStartValue = TimerManager.GetValue(TimerType.LevelStart);
-
-                const int flashInterval = 15;
-                bool showWhite = (levelStartValue / flashInterval) % 2 == 0;
-
-                for (int row = 3; row < board.Grid.GetLength(0) - 2; row++)
+                for (int col = 0; col < board.Grid.GetLength(1); col++)
                 {
-                    for (int col = 0; col < board.Grid.GetLength(1); col++)
+                    Tile tile = board.Grid[row, col];
+                    float x = col * TileSize * DrawScale;
+                    float y = row * TileSize * DrawScale;
+                    float size = TileSize * DrawScale;
+                    Rectangle src = new Rectangle(col * board.TileHeight, (row - 3) * board.TileWidth, board.TileWidth, board.TileHeight);
+                    Rectangle dest = new Rectangle(x, y, size, size);
+                    Vector2 origin = Vector2.Zero;
+
+                    if (levelStartActive)
                     {
-                        Tile tile = board.Grid[row, col];
-                        float x = col * TileSize * DrawScale;
-                        float y = row * TileSize * DrawScale;
-                        float size = TileSize * DrawScale;
-                        Rectangle src = new Rectangle(col * board.TileHeight, (row - 3) * board.TileWidth, board.TileWidth, board.TileHeight);
-                        Rectangle dest = new Rectangle(x, y, size, size);
-                        Vector2 origin = Vector2.Zero;
-
-                        if (levelStartActive)
-                        {
-                            Texture2D sheet = showWhite ? whiteSheet : emptyBoardSheet;
-                            Raylib.DrawTexturePro(sheet, src, dest, origin, 0f, Color.White);
-                            continue;
-                        }
-
-                        if (tile.HasDot())
-                            Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
-                        else if (tile.HasPowerPellet() && IsPelletVisible())
-                            Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
-                        else
-                            Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
+                        Texture2D sheet = showWhite ? whiteSheet : emptyBoardSheet;
+                        Raylib.DrawTexturePro(sheet, src, dest, origin, 0f, Color.White);
+                        continue;
                     }
+
+                    if (tile.HasDot())
+                        Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
+                    else if (tile.HasPowerPellet() && IsPelletVisible())
+                        Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
+                    else
+                        Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
                 }
             }
+        }
 
-            static void DrawBoardOnce(Board board)
+        static MusicType DecideSiren(Board board, PacMan pacMan, LevelTimer timer)
+        {
+            if (pacMan.IsGhostRunningToHome())
+                return MusicType.Eyes;
+            else if (timer.IsFrightMode())
+                return MusicType.Fright;
+            switch (board.RemainingDots)
             {
-                for (int row = 3; row < board.Grid.GetLength(0) - 2; row++)
+                case > 174:
+                    return MusicType.Siren0;
+                case > 104:
+                    return MusicType.Siren1;
+                case > 76:
+                    return MusicType.Siren2;
+                case > 34:
+                    return MusicType.Siren3;
+                case >= 0:
+                    return MusicType.Siren4;
+                default:
+                    return MusicType.Siren0;
+            }
+        }
+        static void DrawBoardOnce(Board board)
+        {
+            for (int row = 3; row < board.Grid.GetLength(0) - 2; row++)
+            {
+                for (int col = 0; col < board.Grid.GetLength(1); col++)
                 {
-                    for (int col = 0; col < board.Grid.GetLength(1); col++)
-                    {
-                        Tile tile = board.Grid[row, col];
-                        float x = col * TileSize * DrawScale;
-                        float y = row * TileSize * DrawScale;
-                        float size = TileSize * DrawScale;
-                        Rectangle src = new Rectangle(col * board.TileHeight, (row - 3) * board.TileWidth, board.TileWidth, board.TileHeight);
-                        Rectangle dest = new Rectangle(x, y, size, size);
-                        Vector2 origin = Vector2.Zero;
+                    Tile tile = board.Grid[row, col];
+                    float x = col * TileSize * DrawScale;
+                    float y = row * TileSize * DrawScale;
+                    float size = TileSize * DrawScale;
+                    Rectangle src = new Rectangle(col * board.TileHeight, (row - 3) * board.TileWidth, board.TileWidth, board.TileHeight);
+                    Rectangle dest = new Rectangle(x, y, size, size);
+                    Vector2 origin = Vector2.Zero;
 
-                        if (tile.HasDot())
-                            Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
-                        else
-                            Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
-                    }
+                    if (tile.HasDot())
+                        Raylib.DrawTexturePro(fullBoardSheet, src, dest, origin, 0f, Color.White);
+                    else
+                        Raylib.DrawTexturePro(emptyBoardSheet, src, dest, origin, 0f, Color.White);
                 }
             }
+        }
         static void DrawMessage(Dictionary<(int col, int row), char> message, TextColor color)
         {
             foreach (var kvp in message)
@@ -264,21 +291,21 @@ namespace PacManGame
                 int col = kvp.Key.col;
                 int row = kvp.Key.row;
                 char c = kvp.Value;
-                
+
                 // Calculate screen position
                 float x = col * TileSize * DrawScale;
                 float y = row * TileSize * DrawScale;
-                float size = TileSize * DrawScale ;
-                
+                float size = TileSize * DrawScale;
+
                 // Get the source rectangle from TextSprites
                 Rectangle src = TextSprites.GetChar(color, c);
                 Rectangle dest = new Rectangle(x, y, size, size);
                 Vector2 origin = Vector2.Zero;
-                
+
                 Raylib.DrawTexturePro(textSheet, src, dest, origin, 0f, Color.White);
             }
         }
-        
+
         static void DrawFruit(Fruit fruit, int level)
         {
             if (!fruit.IsActive() && fruit.PointsTimer == 0)
@@ -292,42 +319,42 @@ namespace PacManGame
             else
                 src = Sprites.FruitPointsSelector(LevelSpecs.GetFruitEntry(level));
             Rectangle dest = new Rectangle(screenX, screenY, size, size);
-            Vector2 origin = new Vector2(size / 2, size / 2); 
+            Vector2 origin = new Vector2(size / 2, size / 2);
             Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
         }
-        
+
         static void DrawPacMan(PacMan pacman)
+        {
+            float screenX = pacman.PixelPosX * DrawScale;
+            float screenY = pacman.PixelPosY * DrawScale;
+            float size = TileSize * DrawScale * 2.0f;
+            Rectangle src;
+            float rotation = 0f;
+
+            if (pacman.IsGhostDead())
+                src = new Rectangle(0, 0, 0, 0);
+            else if (!playDeathAnim)
             {
-                float screenX = pacman.PixelPosX * DrawScale;
-                float screenY = pacman.PixelPosY * DrawScale;
-                float size = TileSize * DrawScale * 2.0f;
-                Rectangle src;
-                float rotation = 0f;
-
-                if (pacman.IsGhostDead())
-                    src = new Rectangle(0, 0, 0, 0);
-                else if (!playDeathAnim)
+                src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
+                if (pacman.JustTurned > 0)
                 {
-                    src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
-                    if (pacman.JustTurned > 0)
-                {
-                        rotation = GetTurnTiltAngle(pacman.PreviousDirection, pacman.direction);   
+                    rotation = GetTurnTiltAngle(pacman.PreviousDirection, pacman.direction);
                 }
-                }
-                else
-                    src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
-
-                Rectangle dest = new Rectangle(screenX, screenY, size, size);
-                Vector2 origin = new Vector2(size / 2, size / 2);
-                Raylib.DrawTexturePro(spriteSheet, src, dest, origin, rotation, Color.White);
             }
+            else
+                src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
 
-            static float GetTurnTiltAngle(Vector2D from, Vector2D to)
-            {
-                const float tiltDegrees = 25f; // tune to taste — 45 looks drunk, 10-25 reads as a lean
-                int cross = from.X * to.Y - from.Y * to.X;
-                return cross > 0 ? tiltDegrees : -tiltDegrees;
-            }
+            Rectangle dest = new Rectangle(screenX, screenY, size, size);
+            Vector2 origin = new Vector2(size / 2, size / 2);
+            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, rotation, Color.White);
+        }
+
+        static float GetTurnTiltAngle(Vector2D from, Vector2D to)
+        {
+            const float tiltDegrees = 25f; // tune to taste — 45 looks drunk, 10-25 reads as a lean
+            int cross = from.X * to.Y - from.Y * to.X;
+            return cross > 0 ? tiltDegrees : -tiltDegrees;
+        }
 
 
 
@@ -337,7 +364,7 @@ namespace PacManGame
             {
                 float screenX = ghost.PixelPosX * DrawScale;
                 float screenY = ghost.PixelPosY * DrawScale;
-                float size = TileSize * DrawScale * 2.0f; 
+                float size = TileSize * DrawScale * 2.0f;
                 Rectangle src;
                 if (ghost.DeathState.Equals(DiedTransitionState.JustDied))
                     src = Sprites.GhostPointsSelector(ghost.PacMan.EatenGhostsCounter);
@@ -348,34 +375,34 @@ namespace PacManGame
                 else
                     src = Sprites.GhostTypeAndDirectionSelector(ghost.ghostType, ghost.direction)[GhostAnimFrameIndex];
                 Rectangle dest = new Rectangle(screenX, screenY, size, size);
-                Vector2 origin = new Vector2(size / 2, size / 2); 
+                Vector2 origin = new Vector2(size / 2, size / 2);
                 Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
             }
         }
 
         static void DrawBottom(int LIVES, int Level)
+        {
+            int startCol = 3;
+            int endCol = 25;
+            int startRow = 34;
+            int spacing = 2;
+
+            for (int i = 0; i < LIVES; i++)
             {
-                int startCol = 3;
-                int endCol = 25;
-                int startRow = 34;
-                int spacing = 2;
+                DrawPacManLife(startCol + (i * spacing), startRow);
+            }
+            Level = Math.Min(Level, 21);
 
-                for (int i = 0; i < LIVES; i++)
-                {
-                    DrawPacManLife(startCol + (i * spacing), startRow);
-                }
-                Level = Math.Min(Level, 21);
+            // Show at most the last 7 levels' fruit, never going below level 1
+            int startLevel = Math.Max(1, Level - 6);
 
-                    // Show at most the last 7 levels' fruit, never going below level 1
-                    int startLevel = Math.Max(1, Level - 6);
-
-                    int j = 0;
-                    for (int lvl = startLevel; lvl <= Level; lvl++)
-                    {
-                        DrawBottomFruit(lvl, endCol - (j * spacing), 34);
-                        j++;
-                    }
-                }
+            int j = 0;
+            for (int lvl = startLevel; lvl <= Level; lvl++)
+            {
+                DrawBottomFruit(lvl, endCol - (j * spacing), 34);
+                j++;
+            }
+        }
 
         static void DrawBottomFruit(int Level, int col, int row)
         {
@@ -414,9 +441,9 @@ namespace PacManGame
                 IncrementPacManTimers(Sprites.PacManDead.Count, 10);
 
             IncrementGhostTimer(Sprites.BlinkyDirectionList[0].Count);
-        
+
             if (TimerManager.IsDone(TimerType.PelletAnim))
-                    TimerManager.ResetTimer(TimerType.PelletAnim);
+                TimerManager.ResetTimer(TimerType.PelletAnim);
         }
         public static void GameReset(PacMan pacMan)
         {
@@ -433,23 +460,24 @@ namespace PacManGame
             if (TimerManager.IsDone(TimerType.PacManAnim))
             {
                 PacManAnimFrameIndex = (PacManAnimFrameIndex + 1) % AvailableFrames;
-                if (PacManAnimFrameIndex+1 == Sprites.PacManDead.Count)
+                if (PacManAnimFrameIndex + 1 == Sprites.PacManDead.Count)
                     ResetGame = true;
                 TimerManager.ResetTimer(TimerType.PacManAnim, FrameBuffer);
             }
         }
         public static void IncrementGhostTimer(int AvailableFrames)
         {
-            if (TimerManager.IsDone(TimerType.GhostAnim)){
+            if (TimerManager.IsDone(TimerType.GhostAnim))
+            {
                 GhostAnimFrameIndex = (GhostAnimFrameIndex + 1) % AvailableFrames;
                 TimerManager.ResetTimer(TimerType.GhostAnim);
             }
         }
         static bool IsPelletVisible()
-            {
-                int value = TimerManager.GetValue(TimerType.PelletAnim);
-                const int halfPeriod = 15; // frames per on/off phase — tune to taste
-                return (value / halfPeriod) % 2 == 0;
-            }
+        {
+            int value = TimerManager.GetValue(TimerType.PelletAnim);
+            const int halfPeriod = 15; // frames per on/off phase — tune to taste
+            return (value / halfPeriod) % 2 == 0;
+        }
     }
 }

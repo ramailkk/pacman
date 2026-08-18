@@ -23,10 +23,10 @@ namespace PacManGame
         public int TileHeight { get; }
         public int TileWidth { get; }
         public int Score { get; set; }
-        public int TotalDots {get; private set;}
+        public int TotalDots { get; private set; }
         public int TotalEnergizers { get; private set; }
         public int TotalSmallDots { get; private set; }
-        public List<(int x, int y)> EnergizersCords; 
+        public List<(int x, int y)> EnergizersCords;
         public int RemainingDots { get; private set; }
         public Tile[,] Grid { get; private set; }
         public int[][] Reference;
@@ -62,14 +62,14 @@ namespace PacManGame
                         TotalSmallDots++;
                     else if (type == TileType.PowerPellet)
                     {
-                     EnergizersCords.Add((i,j));
-                     TotalEnergizers++;   
+                        EnergizersCords.Add((i, j));
+                        TotalEnergizers++;
                     }
                 }
             }
             rng = new Random(Seed);
             TotalDots = TotalSmallDots + TotalEnergizers;
-            
+
             RemainingDots = TotalDots;
             return tiles;
         }
