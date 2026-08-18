@@ -55,6 +55,16 @@ namespace PacManGame
             whiteSheet = Raylib.LoadTexture("assets/sprites/white_board.png");
             Raylib.SetTargetFPS(60);
             SoundManager.Play(SfxType.Start);
+
+            bool ComputeIsFrozen(bool anyGhostEaten) =>
+                TimerManager.IsRunning(TimerType.GameStart)
+                || TimerManager.IsRunning(TimerType.StartTimer)
+                || playDeathAnim || anyGhostEaten || pacman.HasDied
+                || !TimerManager.IsPaused(TimerType.LevelStart)
+                || !TimerManager.IsPaused(TimerType.GameOver)
+                || !transitionState.Equals(LevelTransitionState.None)
+                || !TimerManager.IsPaused(TimerType.LevelEnd);
+
             while (!Raylib.WindowShouldClose())
             {
                 if (ResetGame)
@@ -76,15 +86,11 @@ namespace PacManGame
                     }
 
                 }
-                isFrozen = TimerManager.IsRunning(TimerType.GameStart)
-                || TimerManager.IsRunning(TimerType.StartTimer)
-                || playDeathAnim || anyGhostEaten || pacman.HasDied
-                || !TimerManager.IsPaused(TimerType.LevelStart)
-                || !TimerManager.IsPaused(TimerType.GameOver)
-                || !TimerManager.IsPaused(TimerType.LevelEnd);
+                isFrozen = ComputeIsFrozen(anyGhostEaten);
 
                 MusicType currentMusic = DecideSiren(board1, pacman, timer);
-                if (isFrozen && !currentMusic.Equals(MusicType.Fright))
+                bool inLevelTransition = !transitionState.Equals(LevelTransitionState.None);
+                if (inLevelTransition || (isFrozen && !currentMusic.Equals(MusicType.Fright)))
                     SoundManager.StopSiren();
                 else
                     SoundManager.PlaySiren(currentMusic);
@@ -122,6 +128,7 @@ namespace PacManGame
                             }
                             break;
                     }
+                    isFrozen = ComputeIsFrozen(anyGhostEaten);
                 }
                 if (!pacman.IsValidMove(pacman.direction) && !playDeathAnim)
                     PacManAnimFrameIndex = 1;
@@ -151,6 +158,8 @@ namespace PacManGame
                     TimerManager.Resume(TimerType.GameOver);
                     if (TimerManager.IsDone(TimerType.GameOver))
                     {
+                        // DO WHATEVER WE NEED TO DO WHEN THE GAME ENDS
+                        board1.UpdateHighScore();
                         TimerManager.PauseAndReset(TimerType.GameOver);
                         return;
                     }
@@ -173,7 +182,7 @@ namespace PacManGame
                     DrawPacMan(pacman);
                 DrawAllMessages();
                 DrawMessage(ScreenMessages.GetScore(board1.Score, 3, 1), TextColor.White);
-                DrawMessage(ScreenMessages.GetScore(board1.Score, 12, 1), TextColor.White);
+                DrawMessage(ScreenMessages.GetScore(board1.HighScore, 12, 1), TextColor.White);
                 DrawBottom(pacman.LIVES, board1.LEVEL);
                 Raylib.EndDrawing();
             }
@@ -249,13 +258,13 @@ namespace PacManGame
                 return MusicType.Fright;
             switch (board.RemainingDots)
             {
-                case > 174:
-                    return MusicType.Siren0;
                 case > 104:
-                    return MusicType.Siren1;
+                    return MusicType.Siren0;
                 case > 76:
-                    return MusicType.Siren2;
+                    return MusicType.Siren1;
                 case > 34:
+                    return MusicType.Siren2;
+                case > 10:
                     return MusicType.Siren3;
                 case >= 0:
                     return MusicType.Siren4;

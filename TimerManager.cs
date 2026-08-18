@@ -26,7 +26,7 @@ namespace PacManGame
         private static HashSet<TimerType> autoPause = new();
         private static readonly Dictionary<TimerType, int> DefaultDurations = new()
         {
-            { TimerType.GameStart, 240 },
+            { TimerType.GameStart, 60 },
             { TimerType.StartTimer, 120 },
             { TimerType.PacManDeath, 60 },
             { TimerType.GhostEaten, 60 },
@@ -56,6 +56,8 @@ namespace PacManGame
             autoPause.Remove(TimerType.GhostAnim);
             autoPause.Remove(TimerType.PelletAnim);
 
+            // Just for the absolute start of the game
+            ResetTimer(TimerType.GameStart, 240);
         }
 
         public static void SetTimer(TimerType id, int frames)
@@ -94,7 +96,7 @@ namespace PacManGame
         public static void ResetTimer(TimerType id, int newValue)
         {
             timers[id] = newValue;
-            maxValues[id] = newValue;
+            // maxValues[id] = newValue;
         }
 
         public static void Pause(TimerType id) => paused[id] = true;

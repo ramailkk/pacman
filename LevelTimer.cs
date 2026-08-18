@@ -32,6 +32,7 @@ public class LevelTimer
         ModeTimer = 0;
         ModeTimerIndex = 0;
         GlobalMode = ModeType.Scatter;
+        FrightTimer = 0;
         UpdateAllGhostMode(GlobalMode);
     }
 

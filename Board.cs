@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.IO;
 
 namespace PacManGame
 {
@@ -23,6 +23,7 @@ namespace PacManGame
         public int TileHeight { get; }
         public int TileWidth { get; }
         public int Score { get; set; }
+        public int HighScore { get; set; }
         public int TotalDots { get; private set; }
         public int TotalEnergizers { get; private set; }
         public int TotalSmallDots { get; private set; }
@@ -40,6 +41,7 @@ namespace PacManGame
             TileWidth = tileWidth;
             Reference = reference;
             Score = 0;
+            HighScore = InitializeHighScore();
             TotalSmallDots = 0;
             TotalEnergizers = 0;
             TotalDots = 0;
@@ -74,14 +76,20 @@ namespace PacManGame
             RemainingDots = TotalDots;
             return tiles;
         }
+        public void UpdateScore(int points)
+        {
+            Score += points;
+            if (Score > HighScore)
+                HighScore = Score;
+        }
         public void UpdateDotScore()
         {
-            Score += 10;
+            UpdateScore(10);
             RemainingDots--;
         }
         public void UpdatePowerScore()
         {
-            Score += 50;
+            UpdateScore(50);
             RemainingDots--;
         }
         public void UpdateFruitScore()
@@ -96,6 +104,16 @@ namespace PacManGame
             RemainingDots = 0;
             Grid = SetupBoard(Reference);
             LEVEL++;
+        }
+        public int InitializeHighScore(){
+            string highscore = File.ReadAllText("save/highscore.txt");
+            if (int.TryParse(highscore, out int result))
+                return result;
+            return 10000;
+        }
+        public void UpdateHighScore()
+        {
+            File.WriteAllText("save/highscore.txt", HighScore.ToString());
         }
     }
 }
