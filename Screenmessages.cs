@@ -34,7 +34,7 @@ namespace PacManGame
 
         // "1UP" — static label, top-left of the HUD row above the maze.
         public static readonly Dictionary<(int col, int row), char> OneUp =
-            BuildMessage("1UP", 3, 0);
+            BuildMessage("1UP", 2, 0);
 
         // "2UP" — static label, top-right; only shown in 2-player mode.
         public static readonly Dictionary<(int col, int row), char> TwoUp =
@@ -42,14 +42,17 @@ namespace PacManGame
 
         // "HIGH SCORE" — static label, top-center of the HUD row.
         public static readonly Dictionary<(int col, int row), char> HighScore =
-            BuildMessage("HIGH SCORE", 9, 0);
+            BuildMessage("HIGH SCORE", 7, 0);
 
         // "CREDIT" — bottom-left, followed by the credit count digit(s).
         public static readonly Dictionary<(int col, int row), char> Credit =
             BuildMessage("CREDIT", 0, 35);
         public static readonly Dictionary<(int col, int row), char> ScoreLabel =
             BuildMessage("SCORE", 3, 1);
-
+        public static readonly Dictionary<(int col, int row), char> MyMessage =
+            BuildMessage("LOVE FROM", 19, 0);
+        public static readonly Dictionary<(int col, int row), char> MyName =
+            BuildMessage("RAMAIL", 21, 1);
         public static Dictionary<(int col, int row), char> GetScore(int score, int col, int row)
         {
             String scoreString = score.ToString();

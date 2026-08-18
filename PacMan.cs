@@ -22,14 +22,15 @@ namespace PacManGame
         private int cornerCenterY;
         public PacMan(int x, int y, Board board, Fruit fruit) : base(x, y, board)
         {
-            this.Initialize();
             Fruit = fruit;
+            this.Initialize();
             HasExtraLife = false;
             LIVES = 3;
         }
 
         public override void Initialize()
         {
+            Fruit.SetInActive(false);
             base.Initialize();
             MULT = 1;
             bufferDirection = Vector2D.Zero;
@@ -156,7 +157,7 @@ namespace PacManGame
                         LIVES--;
                         HasDied = true;
                     }
-                    break;
+                    return;
                 }
             }
         }
@@ -217,6 +218,7 @@ namespace PacManGame
             }
             else if (Fruit.IsActive())
             {
+                // Remember to change this for MS PACMAN
                 int pixelDistX = Math.Abs(this.PixelPosX - Fruit.PixelPosX);
                 if (pixelDistX <= board.TileWidth / 2 && PixelPosY == Fruit.PixelPosY)
                 {

@@ -27,6 +27,7 @@ namespace PacManGame
         static readonly Dictionary<MusicType, Music> music = new();
         static bool DotToggle;
         static Sound? currentSound;
+        static SfxType? currentSoundType;
         static Music? currentSiren;
         static bool isSirenPlaying = false;
         static MusicType currentSirenType;
@@ -91,11 +92,18 @@ namespace PacManGame
         public static void Play(SfxType type)
         {
             if (currentSound.HasValue && Raylib.IsSoundPlaying(currentSound.Value))
+            {
+                // Let the extra-life jingle finish on its own instead of getting
+                // cut off by the next waka/eat sound a frame or two later.
+                if (currentSoundType == SfxType.ExtraLife && type != SfxType.ExtraLife)
+                    return;
                 Raylib.StopSound(currentSound.Value);
+            }
 
             Sound next = sounds[type];
             Raylib.PlaySound(next);
             currentSound = next;
+            currentSoundType = type;
         }
 
         public static void PlayWaka()

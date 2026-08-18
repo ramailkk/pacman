@@ -87,10 +87,8 @@ namespace PacManGame
             int newPixelX = PixelPosX + currentDirection.X;
             int newPixelY = PixelPosY + currentDirection.Y;
             (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
-            
             (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
             Tile targetTile = board.Grid[tileY, tileX];
-
             if (!IsTileWalkable(targetTile))
                 return false;
             

@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Raylib_cs;
 
 namespace PacManGame
@@ -8,6 +9,11 @@ namespace PacManGame
     {
         const int TileSize = 8;
         const float DrawScale = 3f;
+        // Blank row of breathing room above the maze so it doesn't sit flush
+        // under the OS title bar. Purely cosmetic - the board/game logic below
+        // never sees this, it's applied as a draw-time offset.
+        const int TopMarginRows = 1;
+        static readonly int TopMarginPixels = (int)(TopMarginRows * TileSize * DrawScale);
         static bool isFrozen;
         static bool ResetGame;
         static bool boardDrawnOnce;
@@ -43,10 +49,14 @@ namespace PacManGame
             TimerManager.Initialize();
             SoundManager.Initialize();
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
-            int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale);
+            int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + TopMarginPixels;
 
 
             Raylib.InitWindow(screenWidth, screenHeight, "PacMan");
+            Image icon = Raylib.LoadImage("assets/icons/Pacman.png");
+            Raylib.SetWindowIcon(icon);
+            Raylib.UnloadImage(icon);
+            EnableDarkTitleBar();
 
             spriteSheet = Raylib.LoadTexture("assets/sprites/AllSprites.png");
             emptyBoardSheet = Raylib.LoadTexture("assets/sprites/empty_board.png");
@@ -171,6 +181,9 @@ namespace PacManGame
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
+                // Camera2D topMarginCamera = new Camera2D { Offset = new Vector2(0, TopMarginPixels), Target = Vector2.Zero, Rotation = 0f, Zoom = 1f };
+                // Raylib.BeginMode2D(topMarginCamera);
+
                 if (boardDrawnOnce)
                     DrawBoardOnce(board1);
                 else
@@ -180,16 +193,15 @@ namespace PacManGame
                     DrawGhosts(ghosts);
                 if (!TimerManager.IsRunning(TimerType.StartTimer) && TimerManager.IsPaused(TimerType.GameOver))
                     DrawPacMan(pacman);
-                DrawAllMessages();
-                DrawMessage(ScreenMessages.GetScore(board1.Score, 3, 1), TextColor.White);
-                DrawMessage(ScreenMessages.GetScore(board1.HighScore, 12, 1), TextColor.White);
-                DrawBottom(pacman.LIVES, board1.LEVEL);
+                DrawAllMessages(board1, pacman);
+
+                Raylib.EndMode2D();
                 Raylib.EndDrawing();
             }
 
             Raylib.CloseWindow();
         }
-        static void DrawAllMessages()
+        static void DrawAllMessages(Board board1, PacMan pacman)
         {
             if (!TimerManager.IsPaused(TimerType.StartTimer))
                 DrawMessage(ScreenMessages.PlayerOne, TextColor.Cyan);
@@ -199,6 +211,11 @@ namespace PacManGame
                 DrawMessage(ScreenMessages.GameOver, TextColor.Red);
             DrawMessage(ScreenMessages.HighScore, TextColor.White);
             DrawMessage(ScreenMessages.OneUp, TextColor.White);
+            DrawMessage(ScreenMessages.MyMessage, TextColor.Pink);
+            DrawMessage(ScreenMessages.MyName, TextColor.White);
+            DrawMessage(ScreenMessages.GetScore(board1.Score, 2, 1), TextColor.White);
+            DrawMessage(ScreenMessages.GetScore(board1.HighScore, 10, 1), TextColor.White);
+            DrawBottom(pacman.LIVES - 1, board1.LEVEL);
         }
 
         static void HandleInput(PacMan pacman)
@@ -472,6 +489,20 @@ namespace PacManGame
             int value = TimerManager.GetValue(TimerType.PelletAnim);
             const int halfPeriod = 15; // frames per on/off phase — tune to taste
             return (value / halfPeriod) % 2 == 0;
+        }
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int valueSize);
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+        static unsafe void EnableDarkTitleBar()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+            IntPtr hwnd = (IntPtr)Raylib.GetWindowHandle();
+            int enabled = 1;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref enabled, sizeof(int));
         }
     }
 }

@@ -106,6 +106,8 @@ namespace PacManGame
             LEVEL++;
         }
         public int InitializeHighScore(){
+            if (!File.Exists("save/highscore.txt"))
+                return 10000;
             string highscore = File.ReadAllText("save/highscore.txt");
             if (int.TryParse(highscore, out int result))
                 return result;
@@ -113,6 +115,7 @@ namespace PacManGame
         }
         public void UpdateHighScore()
         {
+            Directory.CreateDirectory("save");
             File.WriteAllText("save/highscore.txt", HighScore.ToString());
         }
     }
