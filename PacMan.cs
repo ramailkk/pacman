@@ -16,8 +16,10 @@ namespace PacManGame
         public int FreezeFramesRemaining;
         public bool HasDied;
         public bool HasExtraLife;
-        public Vector2D PreviousDirection;
-        public int JustTurned;
+        public bool isCornerTurn;
+        private bool centering;
+        private int cornerCenterX;
+        private int cornerCenterY;
         public PacMan(int x, int y, Board board, Fruit fruit) : base(x, y, board)
         {
             this.Initialize();
@@ -46,8 +48,6 @@ namespace PacManGame
         {
             if (Frozen)
                 return;
-            if (JustTurned > 0)
-                JustTurned--;
             int moveCount = GetStepsThisTick();
             for (int i = 0; i < moveCount; i++)
             {
@@ -61,15 +61,27 @@ namespace PacManGame
                 int newPixelX = PixelPosX + direction.X;
                 int newPixelY = PixelPosY + direction.Y;
                 (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
-                (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
 
                 if (base.IsValidMove(direction))
                 {
-                    (PixelPosX, PixelPosY) = ConvertTileToPixel(tileX, tileY);
-                    if (direction.X == 0)
-                        PixelPosY = newPixelY;
-                    else
-                        PixelPosX = newPixelX;
+                    PixelPosX = newPixelX;
+                    PixelPosY = newPixelY;
+                    // crip walking my boy here..on the set
+                    if (centering)
+                    {
+                        if (direction.X == 0)
+                        {
+                            PixelPosX += Math.Sign(cornerCenterX - PixelPosX);
+                            if (PixelPosX == cornerCenterX)
+                                centering = false;
+                        }
+                        else
+                        {
+                            PixelPosY += Math.Sign(cornerCenterY - PixelPosY);
+                            if (PixelPosY == cornerCenterY)
+                                centering = false;
+                        }
+                    }
                 }
                 CheckConsumables();
             }
@@ -85,12 +97,13 @@ namespace PacManGame
                 return;
             if (IsValidMove(bufferDirection))
             {
-                bool isCornerTurn = !bufferDirection.Equals(direction)
+                isCornerTurn = !bufferDirection.Equals(direction)
                                 && !bufferDirection.Equals(direction.Reverse());
                 if (isCornerTurn)
                 {
-                    PreviousDirection = direction;
-                    JustTurned = 5;
+                    centering = true;
+                    (int curTileX, int curTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+                    (cornerCenterX, cornerCenterY) = ConvertTileToPixel(curTileX, curTileY);
                 }
                 ChangeDirection(bufferDirection);
                 ChangeBufferDirection(Vector2D.Zero);

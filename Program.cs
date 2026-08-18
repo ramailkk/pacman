@@ -343,13 +343,7 @@ namespace PacManGame
             if (pacman.IsGhostDead())
                 src = new Rectangle(0, 0, 0, 0);
             else if (!playDeathAnim)
-            {
                 src = Sprites.PacManDirectionSelector(pacman.direction)[PacManAnimFrameIndex];
-                if (pacman.JustTurned > 0)
-                {
-                    rotation = GetTurnTiltAngle(pacman.PreviousDirection, pacman.direction);
-                }
-            }
             else
                 src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
 
@@ -357,16 +351,6 @@ namespace PacManGame
             Vector2 origin = new Vector2(size / 2, size / 2);
             Raylib.DrawTexturePro(spriteSheet, src, dest, origin, rotation, Color.White);
         }
-
-        static float GetTurnTiltAngle(Vector2D from, Vector2D to)
-        {
-            const float tiltDegrees = 25f; // tune to taste — 45 looks drunk, 10-25 reads as a lean
-            int cross = from.X * to.Y - from.Y * to.X;
-            return cross > 0 ? tiltDegrees : -tiltDegrees;
-        }
-
-
-
         static void DrawGhosts(List<Ghost> ghosts)
         {
 
