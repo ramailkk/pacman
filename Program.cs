@@ -360,6 +360,7 @@ namespace PacManGame
 
         static void DrawGhosts(List<Ghost> ghosts)
         {
+
             foreach (var ghost in ghosts)
             {
                 float screenX = ghost.PixelPosX * DrawScale;

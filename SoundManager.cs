@@ -11,7 +11,6 @@ namespace PacManGame
         ExtraLife,
         Start,
     }
-
     public enum MusicType
     {
         Siren0,
@@ -22,7 +21,6 @@ namespace PacManGame
         Fright,
         Eyes
     }
-
     public static class SoundManager
     {
         static readonly Dictionary<SfxType, Sound> sounds = new();
@@ -32,7 +30,6 @@ namespace PacManGame
         static Music? currentSiren;
         static bool isSirenPlaying = false;
         static MusicType currentSirenType;
-
         public static void Initialize()
         {
             Raylib.InitAudioDevice();

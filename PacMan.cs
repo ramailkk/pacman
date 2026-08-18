@@ -133,6 +133,10 @@ namespace PacManGame
                         board.Score += 200 * (int)Math.Pow(2, MULT);
                         MULT++; //Reset this back to 1 when Fright is Intiaited 
                         EatenGhostsCounter++;
+
+                        // Moving ghost to the end of the list so it gets rendered at the end
+                        ghosts.Remove(ghost);
+                        ghosts.Add(ghost);
                     }
                     else if (!ghost.CurrentMode.Equals(ModeType.Fright) && !ghost.CurrentMode.Equals(ModeType.Dead) && !HasDied)
                     {

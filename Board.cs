@@ -44,6 +44,7 @@ namespace PacManGame
             TotalEnergizers = 0;
             TotalDots = 0;
             RemainingDots = 0;
+            rng = new Random(Seed);
             EnergizersCords = new List<(int x, int y)>(4);
             Grid = SetupBoard(reference);
             LEVEL = 1;

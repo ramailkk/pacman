@@ -62,13 +62,5 @@ namespace PacManGame
         {
             return Type.Equals(TileType.Tunnel);
         }
-        public void SetFruit(bool hasFruit)
-        {
-            this.hasFruit = hasFruit;
-        }
-        public bool HasFruit()
-        {
-            return this.hasFruit;
-        }
     }
 }

@@ -25,9 +25,6 @@ namespace PacManGame
         public static Dictionary<FruitType, Rectangle> FruitToPointsRect;
         public static List<Rectangle> PacManDead;
         public static Rectangle PacManLife;
-
-        // ... etc for eyes, fruit, etc.
-
         static Sprites()
         {
             (int offsetX, int offsetY) = (16, 16);
@@ -153,13 +150,21 @@ namespace PacManGame
             for (int i = 0; i < 5; i++)
             {
                 FruitType fruit = values[i];
-                FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY, offsetX, offsetY);
+                if (i == 4)
+                    FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY, offsetX+4, offsetY);
+                else
+                    FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY, offsetX, offsetY);
                 startFruitPointsX += offsetX;
             }
+
+
+
+            startFruitPointsX = 63;
+            startFruitPointsY = 160;
             for (int i = 5; i < values.Length; i++)
             {
                 FruitType fruit = values[i];
-                FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY + offsetY * i, offsetX, offsetY);
+                FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY + (offsetY * (i-5)), offsetX+4, offsetY);
             }
 
             PacManDead = new List<Rectangle>();
@@ -175,11 +180,13 @@ namespace PacManGame
             GhostPoints = new List<Rectangle>();
             for (int i = 0; i < 4; i++)
             {
-                GhostPoints.Add(new Rectangle(startGhostPointsX + offsetX * i, startGhostPointsY, offsetX, offsetY));
+                if (i == 3)
+                    GhostPoints.Add(new Rectangle(startGhostPointsX + offsetX * i, startGhostPointsY, offsetX+4, offsetY));
+                else
+                    GhostPoints.Add(new Rectangle(startGhostPointsX + offsetX * i, startGhostPointsY, offsetX, offsetY));
             }
 
         }
-
         public static List<Rectangle> PacManDirectionSelector(Vector2D direction)
         {
             return PacmanDirectionList[DirToInt[direction]];
@@ -221,7 +228,6 @@ namespace PacManGame
         {
             return isBlue ? FrightBlue : FrightWhite;
         }
-
         public static Rectangle GhostDeadSelector(Vector2D direction)
         {
             return DeadEyes[DirToInt[direction]];
@@ -234,6 +240,5 @@ namespace PacManGame
         {
             return FruitToPointsRect[fruit];
         }
-
     }
 }
