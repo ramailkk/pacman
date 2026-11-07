@@ -89,8 +89,17 @@ namespace PacManGame
             // Extra varaibles reset
             direction = Vector2D.Left;
             CurrentMode = ModeType.Scatter;
-            hasAlignedToDoor = false;
             SetDotLimit();
+
+            //for my sanity clear all
+            DeathState = DiedTransitionState.None;
+            justDied = false;
+            hasAlignedToDoor = false;
+            hasEnteredDoor = false;
+            canReverse = false;
+            pendingDirection = Vector2D.Zero;
+            pendingTileX = pendingTileY = int.MinValue;
+            accumulator = 0;
             // House Check
             if (this.isGhostinHouse())
             {
@@ -395,7 +404,7 @@ namespace PacManGame
             if (mode.Equals(ModeType.Scatter) && isCruiseElroyActivated())
                 mode = ModeType.Chase;
 
-            if (CurrentMode.Equals(ModeType.Dead) && mode.Equals(mode.Equals(ModeType.Fright)))
+            if (CurrentMode.Equals(ModeType.Dead) && mode.Equals(ModeType.Fright))
                 return;
             // Reversal logic
             if (CurrentMode.Equals(ModeType.Chase) && (mode.Equals(ModeType.Scatter) || mode.Equals(ModeType.Fright)))

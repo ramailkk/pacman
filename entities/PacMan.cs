@@ -36,6 +36,7 @@ namespace PacManGame
             bufferDirection = Vector2D.Zero;
             direction = Vector2D.Left;
             FreezeFramesRemaining = 0;
+            centering = false;
         }
 
         public void UpdateLoop(bool Frozen)
