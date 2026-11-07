@@ -13,8 +13,8 @@ namespace PacManGame
     }
     public class Actor
     {
-        public int PixelPosX;
-        public int PixelPosY;
+        public float PixelPosX;
+        public float PixelPosY;
         public int speed;
         public Vector2D direction;
         protected Board board;
@@ -32,7 +32,7 @@ namespace PacManGame
         public virtual void Initialize()
         {
             (PixelPosX, PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
-            PixelPosX += (board.TileWidth / 2);
+            PixelPosX += board.TileWidth / 2f;
         }
 
         public int GetStepsThisTick()
@@ -45,27 +45,27 @@ namespace PacManGame
 
         public bool IsCollisionWithActor(Actor other)
         {
-            (int myTileX, int myTileY) = ConvertPixelToTile(this.PixelPosX, this.PixelPosY);
+            (int myTileX, int myTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
             (int otherTileX, int otherTileY) = ConvertPixelToTile(other.PixelPosX, other.PixelPosY);
             return (myTileX == otherTileX) && (myTileY == otherTileY);
         }
-        public (int tileX, int tileY) ConvertPixelToTile(int pixelX, int pixelY)
+        public (int tileX, int tileY) ConvertPixelToTile(float pixelX, float pixelY)
         {
-            return (pixelX / board.TileWidth, pixelY / board.TileHeight);
+            return ((int)(pixelX / board.TileWidth), (int)(pixelY / board.TileHeight));
         }
-        public (int pixelX, int pixelY) ConvertTileToPixel(int tileX, int tileY)
+        public (float pixelX, float pixelY) ConvertTileToPixel(int tileX, int tileY)
         {
-            return ((tileX * board.TileWidth) + (board.TileWidth / 2),
-                    (tileY * board.TileHeight) + (board.TileHeight / 2));
+            return ((tileX * board.TileWidth) + ((board.TileWidth - 1) / 2f), 
+                    (tileY * board.TileHeight) + ((board.TileHeight - 1) / 2f));
         }
 
-        public (int pixelX, int pixelY) CheckForTunnel(int newPixelX, int newPixelY)
+        public (float pixelX, float pixelY) CheckForTunnel(float newPixelX, float newPixelY)
         {
-            int totalPixelX = board.TileWidth * board.Grid.GetLength(1);
-            int totalPixelY = board.TileHeight * board.Grid.GetLength(0);
+            float totalPixelX = board.TileWidth * board.Grid.GetLength(1);
+            float totalPixelY = board.TileHeight * board.Grid.GetLength(0);
 
-            int wrappedX = ((newPixelX % totalPixelX) + totalPixelX) % totalPixelX;
-            int wrappedY = ((newPixelY % totalPixelY) + totalPixelY) % totalPixelY;
+            float wrappedX = ((newPixelX % totalPixelX) + totalPixelX) % totalPixelX;
+            float wrappedY = ((newPixelY % totalPixelY) + totalPixelY) % totalPixelY;
 
             return (wrappedX, wrappedY);
         }
@@ -84,8 +84,8 @@ namespace PacManGame
             if (currentDirection.Equals(Vector2D.Zero))
                 return false;
 
-            int newPixelX = PixelPosX + currentDirection.X;
-            int newPixelY = PixelPosY + currentDirection.Y;
+            float newPixelX = PixelPosX + currentDirection.X;
+            float newPixelY = PixelPosY + currentDirection.Y;
             (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
             (int tileX, int tileY) = ConvertPixelToTile(newPixelX, newPixelY);
             Tile targetTile = board.Grid[tileY, tileX];
@@ -93,7 +93,7 @@ namespace PacManGame
                 return false;
             
             (int StartingTileX, int StartingTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
-            (int CenterX, int CenterY) = ConvertTileToPixel(StartingTileX,StartingTileY);
+            (float CenterX, float CenterY) = ConvertTileToPixel(StartingTileX,StartingTileY);
                 if (!IsValidTile(StartingTileX,StartingTileY, currentDirection)){
                     // check if its a turn
                     if (!currentDirection.Equals(direction.Reverse()) && !currentDirection.Equals(direction))
@@ -111,10 +111,10 @@ namespace PacManGame
             Tile targetTile = board.Grid[newTileY, newTileX];
             return IsTileWalkable(targetTile);
         }
-        public (int pixelPosX, int pixelPosY) GetStartCords()
+        public (float pixelPosX, float pixelPosY) GetStartCords()
         {
-            (int pixelPosX, int pixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
-            pixelPosX += (board.TileWidth / 2);
+            (float pixelPosX, float pixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
+            pixelPosX += board.TileWidth / 2f;
             return (pixelPosX, pixelPosY);
         }
         public virtual void ChangeDirection(Vector2D direction)

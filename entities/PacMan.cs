@@ -18,8 +18,8 @@ namespace PacManGame
         public bool HasExtraLife;
         public bool isCornerTurn;
         private bool centering;
-        private int cornerCenterX;
-        private int cornerCenterY;
+        private float cornerCenterX;
+        private float cornerCenterY;
         public PacMan(int x, int y, Board board, Fruit fruit) : base(x, y, board)
         {
             Fruit = fruit;
@@ -59,8 +59,8 @@ namespace PacManGame
                 }
                 DecideDirection();
                 // Calculate new pixel position based on direction
-                int newPixelX = PixelPosX + direction.X;
-                int newPixelY = PixelPosY + direction.Y;
+                float newPixelX = PixelPosX + direction.X;
+                float newPixelY = PixelPosY + direction.Y;
                 (newPixelX, newPixelY) = CheckForTunnel(newPixelX, newPixelY);
 
                 if (base.IsValidMove(direction))
