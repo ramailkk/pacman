@@ -148,7 +148,7 @@ namespace PacManGame
                     {
                         if (HasExitedDoor(13, 14))
                         {
-                            PixelPosX -= board.TileWidth / 2;
+                            // PixelPosX -= board.TileWidth / 2f;
                             direction = Vector2D.Left;
                             pendingDirection = Vector2D.Zero;
                             pendingTileX = pendingTileY = int.MinValue;
@@ -265,8 +265,8 @@ namespace PacManGame
         public bool HasAlignedToDoor(Vector2D dir, int MiddleTileX, int MiddleTileY)
         {
             // GET PINKY'S TILE AND POSIITION AS REFERENCE
-            (int RefPixelX, int RefPixelY) = ConvertTileToPixel(MiddleTileX, MiddleTileY);
-            if ((PixelPosX, PixelPosY) == (RefPixelX + board.TileWidth / 2, RefPixelY))
+            (float RefPixelX, float RefPixelY) = ConvertTileToPixel(MiddleTileX, MiddleTileY);
+            if ((PixelPosX, PixelPosY) == (RefPixelX + board.TileWidth / 2f, RefPixelY))
                 return true;
             if (!dir.Equals(Vector2D.Zero))
                 (PixelPosX, PixelPosY) = (PixelPosX + dir.X, PixelPosY + dir.Y);
@@ -296,8 +296,8 @@ namespace PacManGame
 
         public bool HasPassedDoor(Vector2D dir, int MiddleTileX, int MiddleTileY)
         {
-            (int RefPixelX, int RefPixelY) = ConvertTileToPixel(MiddleTileX, MiddleTileY);
-            if ((PixelPosX, PixelPosY) == (RefPixelX + (board.TileWidth / 2), RefPixelY))
+            (float RefPixelX, float RefPixelY) = ConvertTileToPixel(MiddleTileX, MiddleTileY);
+            if ((PixelPosX, PixelPosY) == (RefPixelX + board.TileWidth / 2f, RefPixelY))
                 return true;
             (PixelPosX, PixelPosY) = (PixelPosX + dir.X, PixelPosY + dir.Y);
             return false;

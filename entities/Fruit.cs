@@ -6,8 +6,8 @@ namespace PacManGame
     }
     public class Fruit
     {
-        public int PixelPosX;
-        public int PixelPosY;
+        public float PixelPosX;
+        public float PixelPosY;
         public int FruitTimer;
         public bool isActive;
         public int PointsTimer;
@@ -19,7 +19,7 @@ namespace PacManGame
         {
             Board = board;
             (PixelPosX, PixelPosY) = ConvertTileToPixel(tilePosX, tilePosY);
-            PixelPosX += Board.TileWidth / 2;
+            PixelPosX += Board.TileWidth / 2f;
             isActive = false;
             FruitTimer = 0;
             random = new Random();
@@ -73,10 +73,10 @@ namespace PacManGame
             if (isEaten)
                 PointsTimer = 120;
         }
-        public (int pixelX, int pixelY) ConvertTileToPixel(int tileX, int tileY)
+        public (float pixelX, float pixelY) ConvertTileToPixel(int tileX, int tileY)
         {
-            return ((tileX * Board.TileWidth) + (Board.TileWidth / 2),
-                    (tileY * Board.TileHeight) + (Board.TileHeight / 2));
+            return ((tileX * Board.TileWidth) + ((Board.TileWidth - 1) / 2f),
+                    (tileY * Board.TileHeight) + ((Board.TileHeight - 1) / 2f));
         }
     }
 }
