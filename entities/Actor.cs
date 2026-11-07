@@ -37,8 +37,8 @@ namespace PacManGame
 
         public int GetStepsThisTick()
         {
-            // at a 100 -> 60fps
-            // at 79 -> 75.67fps -much better for arcade
+            // speed is a percentage: /79 means speed 100 ≈ 1.27 game px per frame
+            // ≈ 76 px/s at 60 FPS (arcade-like). FPS itself is still 60.
             accumulator += speed;
             int steps = accumulator / 79;
             accumulator -= steps * 79;
@@ -57,8 +57,8 @@ namespace PacManGame
         }
         public (float pixelX, float pixelY) ConvertTileToPixel(int tileX, int tileY)
         {
-            return ((tileX * board.TileWidth) + ((board.TileWidth - 1) / 2f), 
-                    (tileY * board.TileHeight) + ((board.TileHeight - 1) / 2f));
+            return ((tileX * board.TileWidth) + (board.TileWidth / 2f), 
+                    (tileY * board.TileHeight) + (board.TileHeight / 2f));
         }
 
         public (float pixelX, float pixelY) CheckForTunnel(float newPixelX, float newPixelY)

@@ -333,14 +333,19 @@ namespace PacManGame
                 src = Sprites.FruitSelector(LevelSpecs.GetFruitEntry(level));
             else
                 src = Sprites.FruitPointsSelector(LevelSpecs.GetFruitEntry(level));
-            DrawSpriteCentered(src, fruit.PixelPosX, fruit.PixelPosY);
+            // Points sprites have different margins, so only the fruit art gets the shift
+            float offsetX = fruit.PointsTimer == 0 ? ArtOffsetX : 0f;
+            DrawSpriteCentered(src, fruit.PixelPosX - offsetX, fruit.PixelPosY);
         }
+
+        // Ghost and fruit art has its blank columns on the LEFT of the 16px cell (ghosts: cols 2-15,
+        // fruit: cols 3-14), so the art centre sits 1 game px right of the cell centre. Shift left by
+        // this much when drawing. Pac-Man art is centred and needs no shift.
+        const float ArtOffsetX = 1f;
 
         // Draws a sprite at its native sheet size (16x16, or 20x16 for some point values) times
         // DrawScale, centred on a position given in game pixels. Size comes from the source
         // rectangle, so no hardcoded multiplier is needed and non-square sprites keep their shape.
-        const float GhostArtOffsetX = 1f; // see DrawGhosts
-
         static void DrawSpriteCentered(Rectangle src, float gameX, float gameY, float rotation = 0f)
         {
             Rectangle dest = new Rectangle(gameX * DrawScale, gameY * DrawScale,
@@ -388,7 +393,7 @@ namespace PacManGame
                 // Ghost art is 14px wide inside a 16px cell with the blank columns on the LEFT
                 // (cols 2-15), so its visual centre sits 1px right of the cell centre. Shift left
                 // by 1 game pixel so ghosts are centred in corridors and symmetric in the house.
-                DrawSpriteCentered(src, ghost.PixelPosX - GhostArtOffsetX, ghost.PixelPosY);
+                DrawSpriteCentered(src, ghost.PixelPosX - ArtOffsetX, ghost.PixelPosY);
             }
         }
 

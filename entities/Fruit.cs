@@ -75,8 +75,8 @@ namespace PacManGame
         }
         public (float pixelX, float pixelY) ConvertTileToPixel(int tileX, int tileY)
         {
-            return ((tileX * Board.TileWidth) + ((Board.TileWidth - 1) / 2f),
-                    (tileY * Board.TileHeight) + ((Board.TileHeight - 1) / 2f));
+            return ((tileX * Board.TileWidth) + (Board.TileWidth / 2f),
+                    (tileY * Board.TileHeight) + (Board.TileHeight / 2f));
         }
     }
 }
