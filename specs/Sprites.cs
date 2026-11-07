@@ -151,7 +151,7 @@ namespace PacManGame
             {
                 FruitType fruit = values[i];
                 if (i == 4)
-                    FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY, offsetX+4, offsetY);
+                    FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY, offsetX + 4, offsetY);
                 else
                     FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY, offsetX, offsetY);
                 startFruitPointsX += offsetX;
@@ -164,7 +164,7 @@ namespace PacManGame
             for (int i = 5; i < values.Length; i++)
             {
                 FruitType fruit = values[i];
-                FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY + (offsetY * (i-5)), offsetX+4, offsetY);
+                FruitToPointsRect[fruit] = new Rectangle(startFruitPointsX, startFruitPointsY + (offsetY * (i - 5)), offsetX + 4, offsetY);
             }
 
             PacManDead = new List<Rectangle>();
@@ -181,7 +181,7 @@ namespace PacManGame
             for (int i = 0; i < 4; i++)
             {
                 if (i == 3)
-                    GhostPoints.Add(new Rectangle(startGhostPointsX + offsetX * i, startGhostPointsY, offsetX+4, offsetY));
+                    GhostPoints.Add(new Rectangle(startGhostPointsX + offsetX * i, startGhostPointsY, offsetX + 4, offsetY));
                 else
                     GhostPoints.Add(new Rectangle(startGhostPointsX + offsetX * i, startGhostPointsY, offsetX, offsetY));
             }

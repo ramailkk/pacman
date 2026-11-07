@@ -219,8 +219,8 @@ namespace PacManGame
             else if (Fruit.IsActive())
             {
                 // Remember to change this for MS PACMAN
-                int pixelDistX = Math.Abs(this.PixelPosX - Fruit.PixelPosX);
-                if (pixelDistX <= board.TileWidth / 2 && PixelPosY == Fruit.PixelPosY)
+                // int pixelDistX = Math.Abs(this.PixelPosX - Fruit.PixelPosX);
+                if (PixelPosX == Fruit.PixelPosX && PixelPosY == Fruit.PixelPosY)
                 {
                     SoundManager.Play(SfxType.EatFruit);
                     Fruit.SetInActive(true);

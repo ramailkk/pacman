@@ -105,7 +105,8 @@ namespace PacManGame
             Grid = SetupBoard(Reference);
             LEVEL++;
         }
-        public int InitializeHighScore(){
+        public int InitializeHighScore()
+        {
             if (!File.Exists("save/highscore.txt"))
                 return 10000;
             string highscore = File.ReadAllText("save/highscore.txt");
