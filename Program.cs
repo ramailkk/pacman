@@ -336,8 +336,8 @@ namespace PacManGame
         {
             if (!fruit.IsActive() && fruit.PointsTimer == 0)
                 return;
-            float screenX = fruit.PixelPosX * DrawScale;
-            float screenY = fruit.PixelPosY * DrawScale;
+            float screenX = MathF.Floor(fruit.PixelPosX * DrawScale);
+            float screenY = MathF.Floor(fruit.PixelPosY * DrawScale);
             float size = TileSize * DrawScale * 2.0f;
             Rectangle src;
             if (fruit.PointsTimer == 0)
@@ -351,8 +351,8 @@ namespace PacManGame
 
         static void DrawPacMan(PacMan pacman)
         {
-            float screenX = pacman.PixelPosX * DrawScale;
-            float screenY = pacman.PixelPosY * DrawScale;
+            float screenX = MathF.Floor(pacman.PixelPosX * DrawScale);
+            float screenY = MathF.Floor(pacman.PixelPosY * DrawScale);
             float size = TileSize * DrawScale * 2.0f;
             Rectangle src;
             float rotation = 0f;
@@ -373,8 +373,8 @@ namespace PacManGame
 
             foreach (var ghost in ghosts)
             {
-                float screenX = ghost.PixelPosX * DrawScale;
-                float screenY = ghost.PixelPosY * DrawScale;
+                float screenX = MathF.Floor(ghost.PixelPosX * DrawScale);
+                float screenY = MathF.Floor(ghost.PixelPosY * DrawScale);
                 float size = TileSize * DrawScale * 2.0f;
                 Rectangle src;
                 if (ghost.DeathState.Equals(DiedTransitionState.JustDied))
