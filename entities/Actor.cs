@@ -37,9 +37,11 @@ namespace PacManGame
 
         public int GetStepsThisTick()
         {
+            // at a 100 -> 60fps
+            // at 79 -> 75.67fps -much better for arcade
             accumulator += speed;
-            int steps = accumulator / 100;
-            accumulator -= steps * 100;
+            int steps = accumulator / 79;
+            accumulator -= steps * 79;
             return steps;
         }
 

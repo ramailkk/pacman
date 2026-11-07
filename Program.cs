@@ -9,11 +9,6 @@ namespace PacManGame
     {
         const int TileSize = 8;
         const float DrawScale = 3f;
-        // Blank row of breathing room above the maze so it doesn't sit flush
-        // under the OS title bar. Purely cosmetic - the board/game logic below
-        // never sees this, it's applied as a draw-time offset.
-        const int TopMarginRows = 1;
-        static readonly int TopMarginPixels = (int)(TopMarginRows * TileSize * DrawScale);
         static bool isFrozen;
         static bool ResetGame;
         static bool boardDrawnOnce;
@@ -49,7 +44,7 @@ namespace PacManGame
             TimerManager.Initialize();
             SoundManager.Initialize();
             int screenWidth = (int)(board1.Grid.GetLength(1) * TileSize * DrawScale);
-            int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale) + TopMarginPixels;
+            int screenHeight = (int)(board1.Grid.GetLength(0) * TileSize * DrawScale);
 
 
             Raylib.InitWindow(screenWidth, screenHeight, "PacMan");
@@ -180,9 +175,6 @@ namespace PacManGame
 
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
-
-                // Camera2D topMarginCamera = new Camera2D { Offset = new Vector2(0, TopMarginPixels), Target = Vector2.Zero, Rotation = 0f, Zoom = 1f };
-                // Raylib.BeginMode2D(topMarginCamera);
 
                 if (boardDrawnOnce)
                     DrawBoardOnce(board1);
@@ -336,24 +328,37 @@ namespace PacManGame
         {
             if (!fruit.IsActive() && fruit.PointsTimer == 0)
                 return;
-            float screenX = fruit.PixelPosX * DrawScale;
-            float screenY = fruit.PixelPosY * DrawScale;
-            float size = TileSize * DrawScale * 2.0f;
             Rectangle src;
             if (fruit.PointsTimer == 0)
                 src = Sprites.FruitSelector(LevelSpecs.GetFruitEntry(level));
             else
                 src = Sprites.FruitPointsSelector(LevelSpecs.GetFruitEntry(level));
-            Rectangle dest = new Rectangle(screenX, screenY, size, size);
-            Vector2 origin = new Vector2(size / 2, size / 2);
-            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
+            DrawSpriteCentered(src, fruit.PixelPosX, fruit.PixelPosY);
+        }
+
+        // Draws a sprite at its native sheet size (16x16, or 20x16 for some point values) times
+        // DrawScale, centred on a position given in game pixels. Size comes from the source
+        // rectangle, so no hardcoded multiplier is needed and non-square sprites keep their shape.
+        const float GhostArtOffsetX = 1f; // see DrawGhosts
+
+        static void DrawSpriteCentered(Rectangle src, float gameX, float gameY, float rotation = 0f)
+        {
+            Rectangle dest = new Rectangle(gameX * DrawScale, gameY * DrawScale,
+                                           src.Width * DrawScale, src.Height * DrawScale);
+            Vector2 origin = new Vector2(dest.Width / 2, dest.Height / 2);
+            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, rotation, Color.White);
+        }
+
+        // Same as above but anchored at the top-left corner of a tile (used for the HUD row).
+        static void DrawSpriteAtTile(Rectangle src, int col, int row)
+        {
+            Rectangle dest = new Rectangle(col * TileSize * DrawScale, row * TileSize * DrawScale,
+                                           src.Width * DrawScale, src.Height * DrawScale);
+            Raylib.DrawTexturePro(spriteSheet, src, dest, Vector2.Zero, 0f, Color.White);
         }
 
         static void DrawPacMan(PacMan pacman)
         {
-            float screenX = pacman.PixelPosX * DrawScale;
-            float screenY = pacman.PixelPosY * DrawScale;
-            float size = TileSize * DrawScale * 2.0f;
             Rectangle src;
             float rotation = 0f;
 
@@ -364,18 +369,13 @@ namespace PacManGame
             else
                 src = Sprites.PacManDeathSelector()[PacManAnimFrameIndex];
 
-            Rectangle dest = new Rectangle(screenX, screenY, size, size);
-            Vector2 origin = new Vector2(size / 2, size / 2);
-            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, rotation, Color.White);
+            DrawSpriteCentered(src, pacman.PixelPosX, pacman.PixelPosY, rotation);
         }
         static void DrawGhosts(List<Ghost> ghosts)
         {
 
             foreach (var ghost in ghosts)
             {
-                float screenX = ghost.PixelPosX * DrawScale;
-                float screenY = ghost.PixelPosY * DrawScale;
-                float size = TileSize * DrawScale * 2.0f;
                 Rectangle src;
                 if (ghost.DeathState.Equals(DiedTransitionState.JustDied))
                     src = Sprites.GhostPointsSelector(ghost.PacMan.EatenGhostsCounter);
@@ -385,9 +385,10 @@ namespace PacManGame
                     src = Sprites.GhostFrightSelector(ghost.PacMan.timer.isBlue)[GhostAnimFrameIndex];
                 else
                     src = Sprites.GhostTypeAndDirectionSelector(ghost.ghostType, ghost.direction)[GhostAnimFrameIndex];
-                Rectangle dest = new Rectangle(screenX, screenY, size, size);
-                Vector2 origin = new Vector2(size / 2, size / 2);
-                Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
+                // Ghost art is 14px wide inside a 16px cell with the blank columns on the LEFT
+                // (cols 2-15), so its visual centre sits 1px right of the cell centre. Shift left
+                // by 1 game pixel so ghosts are centred in corridors and symmetric in the house.
+                DrawSpriteCentered(src, ghost.PixelPosX - GhostArtOffsetX, ghost.PixelPosY);
             }
         }
 
@@ -417,23 +418,11 @@ namespace PacManGame
 
         static void DrawBottomFruit(int Level, int col, int row)
         {
-            float x = col * TileSize * DrawScale;
-            float y = row * TileSize * DrawScale;
-            float size = TileSize * DrawScale * 2.0f; // 2x size of normal tile
-            Rectangle src = Sprites.FruitSelector(LevelSpecs.GetFruitEntry(Level));
-            Rectangle dest = new Rectangle(x, y, size, size);
-            Vector2 origin = Vector2.Zero;
-            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
+            DrawSpriteAtTile(Sprites.FruitSelector(LevelSpecs.GetFruitEntry(Level)), col, row);
         }
         static void DrawPacManLife(int col, int row)
         {
-            float x = col * TileSize * DrawScale;
-            float y = row * TileSize * DrawScale;
-            float size = TileSize * DrawScale * 2.0f; // 2x size of normal tile
-            Rectangle src = Sprites.GetPacManLife();
-            Rectangle dest = new Rectangle(x, y, size, size);
-            Vector2 origin = Vector2.Zero;
-            Raylib.DrawTexturePro(spriteSheet, src, dest, origin, 0f, Color.White);
+            DrawSpriteAtTile(Sprites.GetPacManLife(), col, row);
         }
         public static void CanChangeAnimation()
         {

@@ -208,6 +208,9 @@ namespace PacManGame
                     }
                 }
 
+                // Re-read the tile every step: fast ghosts (eyes at 350) take 3-4 steps per tick
+                // and can cross into a new tile AND reach its center within one tick.
+                (TileX, TileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
                 if ((PixelPosX, PixelPosY) == ConvertTileToPixel(TileX, TileY))
                 {
                     modeTargetTiles[ModeType.Chase] = CalculateTargetTileForEachGhost();
@@ -247,7 +250,7 @@ namespace PacManGame
             int Level = board.LEVEL;
             Tile currentTile = board.Grid[tileY, tileX];
             if (this.CurrentMode.Equals(ModeType.Dead))
-                speed = 350;
+                speed = 250;
             else if (currentTile.IsTunnel())
                 speed = LevelSpecs.GetEntry(Level, LevelSpecs.GhostTunnelSpeed);
             else if (CurrentMode.Equals(ModeType.Fright))
