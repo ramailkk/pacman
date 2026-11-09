@@ -25,9 +25,9 @@ namespace PacManGame
         public int Score { get; set; }
         public int HighScore { get; set; }
         public int TotalDots { get; private set; }
-        public int TotalEnergizers { get; private set; }
+        public int TotalPowerPellets { get; private set; }
         public int TotalSmallDots { get; private set; }
-        public List<(int x, int y)> EnergizersCords;
+        public List<(int x, int y)> PowerPelletsCords;
         public int RemainingDots { get; private set; }
         public Tile[,] Grid { get; private set; }
         public int[][] Reference;
@@ -35,6 +35,10 @@ namespace PacManGame
         public Random rng;
         private const int Seed = 12345;
         public Dictionary<(int col, int row), char> ReadyMessage;
+        // Drawing hooks (no raylib in here): tiles eaten since the last frame, and whether the
+        // whole board must be re-baked (game start / new level). GameDraw.UpdateBoardTexture consumes these.
+        public List<(int row, int col)> ClearedTiles = new();
+        public bool NeedsFullRedraw = true;
         public Board(int[][] reference, int tileWidth, int tileHeight)
         {
             TileHeight = tileHeight;
@@ -43,11 +47,11 @@ namespace PacManGame
             Score = 0;
             HighScore = InitializeHighScore();
             TotalSmallDots = 0;
-            TotalEnergizers = 0;
+            TotalPowerPellets = 0;
             TotalDots = 0;
             RemainingDots = 0;
             rng = new Random(Seed);
-            EnergizersCords = new List<(int x, int y)>(4);
+            PowerPelletsCords = new List<(int x, int y)>(4);
             Grid = SetupBoard(reference);
             LEVEL = 1;
         }
@@ -65,13 +69,13 @@ namespace PacManGame
                         TotalSmallDots++;
                     else if (type == TileType.PowerPellet)
                     {
-                        EnergizersCords.Add((i, j));
-                        TotalEnergizers++;
+                        PowerPelletsCords.Add((i, j));
+                        TotalPowerPellets++;
                     }
                 }
             }
             rng = new Random(Seed);
-            TotalDots = TotalSmallDots + TotalEnergizers;
+            TotalDots = TotalSmallDots + TotalPowerPellets;
 
             RemainingDots = TotalDots;
             return tiles;
@@ -99,10 +103,12 @@ namespace PacManGame
         public void SetupNextLevel()
         {
             TotalDots = 0;
-            TotalEnergizers = 0;
+            TotalPowerPellets = 0;
             TotalSmallDots = 0;
             RemainingDots = 0;
             Grid = SetupBoard(Reference);
+            ClearedTiles.Clear();
+            NeedsFullRedraw = true;
             LEVEL++;
         }
         public int InitializeHighScore()
@@ -118,6 +124,16 @@ namespace PacManGame
         {
             Directory.CreateDirectory("save");
             File.WriteAllText("save/highscore.txt", HighScore.ToString());
+        }
+        // Removes the dot/pellet from the grid and queues the tile to be erased from the drawn board.
+        public void ClearTile(int tileX, int tileY)
+        {
+            Grid[tileY, tileX].RemoveDotOrPellet();
+            ClearedTiles.Add((tileY, tileX));
+        }
+        public bool isLevelFinished()
+        {
+            return RemainingDots == 0;
         }
     }
 }

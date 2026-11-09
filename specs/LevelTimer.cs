@@ -13,8 +13,9 @@ public class LevelTimer
     const int FlashHalfCycleFrames = 14;
 
     public List<Ghost> Ghosts;
-    public LevelTimer(List<Ghost> ghosts)
+    public LevelTimer(List<Ghost> ghosts , int startingLevel)
     {
+        CurrentLevel = startingLevel;
         isBlue = true;
         Ghosts = ghosts;
         Initialize();
@@ -35,9 +36,7 @@ public class LevelTimer
         FrightTimer = 0;
         UpdateAllGhostMode(GlobalMode);
     }
-
-
-
+    
     public void UpdateTimer(bool isFrozen)
     {
         if (isFrozen)
