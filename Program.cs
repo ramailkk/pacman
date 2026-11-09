@@ -95,6 +95,13 @@ namespace PacManGame
                 // 2. Everyone uses that same, already-final isFrozen value.
                 CanChangeAnimation();
                 HandleInput(pacman);
+
+                // Snapshot everyone's tile before anyone moves, so CheckGhostCollisions can catch
+                // Pac-Man and a ghost swapping tiles head-on within this frame.
+                pacman.RecordPreviousTile();
+                foreach (var ghost in ghosts)
+                    ghost.RecordPreviousTile();
+
                 pacman.UpdateLoop(isFrozen);
                 if (board.RemainingDots == 0)
                 {

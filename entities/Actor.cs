@@ -33,6 +33,7 @@ namespace PacManGame
         {
             (PixelPosX, PixelPosY) = ConvertTileToPixel(TilePosX, TilePosY);
             PixelPosX += board.TileWidth / 2f;
+            RecordPreviousTile(); // no stale "previous tile" from before a reset
         }
 
         public int GetStepsThisTick()
@@ -45,11 +46,31 @@ namespace PacManGame
             return steps;
         }
 
+        // Tile this actor was in at the start of the current frame, before anyone moved.
+        // Used to catch actors that swap tiles head-on within a single frame.
+        public int PrevTileX;
+        public int PrevTileY;
+
+        // Call once per frame for every actor BEFORE any of them move.
+        public void RecordPreviousTile()
+        {
+            (PrevTileX, PrevTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
+        }
+
         public bool IsCollisionWithActor(Actor other)
         {
             (int myTileX, int myTileY) = ConvertPixelToTile(PixelPosX, PixelPosY);
             (int otherTileX, int otherTileY) = ConvertPixelToTile(other.PixelPosX, other.PixelPosY);
-            return (myTileX == otherTileX) && (myTileY == otherTileY);
+
+            // Same tile right now
+            if (myTileX == otherTileX && myTileY == otherTileY)
+                return true;
+
+            // Pass-through: we moved into the tile they just left AND they moved into the tile we
+            // just left, i.e. we crossed the same tile boundary in opposite directions this frame.
+            bool iTookTheirTile = myTileX == other.PrevTileX && myTileY == other.PrevTileY;
+            bool theyTookMyTile = otherTileX == PrevTileX && otherTileY == PrevTileY;
+            return iTookTheirTile && theyTookMyTile;
         }
         public (int tileX, int tileY) ConvertPixelToTile(float pixelX, float pixelY)
         {
