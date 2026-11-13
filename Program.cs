@@ -7,20 +7,15 @@ namespace PacManGame
     enum LevelTransitionState { None, LevelEnding, LevelStarting }
     class Program
     {
-        const int TileSize = 8;
-        const float DrawScale = 3f;
-        static bool isFrozen = false;
-        static bool ResetGame;
-        static bool boardDrawnOnce;
-        static int PacManAnimFrameIndex = 2;
-        static int GhostAnimFrameIndex;
-        static bool playDeathAnim;
-
+        static bool isFrozen = false; // to ensure all entities remain in place
+        static bool ResetGame = false; // flag for reseting games
+        static int PacManAnimFrameIndex = 2; // to switch pacmans sprite animation where 2 is the starting circle
+        static int GhostAnimFrameIndex;  // to switch ghosts sprite animation 
+        static bool playDeathAnim = false; // to play pacmans death animation
         static LevelTransitionState transitionState = LevelTransitionState.None;
-
         static void Main(string[] args)
         {   
-            Board board = new(LevelSpecs.board, TileSize, TileSize);
+            Board board = new(LevelSpecs.board, GameDraw.TileSize, GameDraw.TileSize);
             
             Fruit fruit = new Fruit(13, 26, board);
             PacMan pacman = new PacMan(13, 26, board, fruit);
@@ -28,27 +23,25 @@ namespace PacManGame
             Ghost pinky = new Ghost(13, 17, board, 3, 0, pacman, GhostType.Pinky);
             Ghost inky = new Ghost(11, 17, board, 28, 35, pacman, GhostType.Inky);
             Ghost clyde = new Ghost(15, 17, board, 0, 35, pacman, GhostType.Clyde);
-            
             inky.SetBlinky(blinky);
             List<Ghost> ghosts = [blinky, inky, clyde, pinky];
-            LevelTimer timer = new LevelTimer(ghosts);
+            LevelTimer timer = new LevelTimer(ghosts, board.LEVEL);
             
             pacman.SetGhosts(ghosts);
             pacman.SetTimer(timer);
-            timer.SetCurrentLevel(board.LEVEL);
-            boardDrawnOnce = false;
             
             TimerManager.Initialize();
             SoundManager.Initialize();
             
-            int screenWidth = (int)(board.Grid.GetLength(1) * TileSize * DrawScale);
-            int screenHeight = (int)(board.Grid.GetLength(0) * TileSize * DrawScale);
+            int screenWidth = (int)(board.Grid.GetLength(1) * GameDraw.TileSize * GameDraw.DrawScale);
+            int screenHeight = (int)(board.Grid.GetLength(0) * GameDraw.TileSize * GameDraw.DrawScale);
 
-            Raylib.InitWindow(screenWidth, screenHeight, "PacMan");
+            Raylib.InitWindow(screenWidth, screenHeight, "Pac-Man");
             Image icon = Raylib.LoadImage("assets/icons/Pacman.png");
             Raylib.SetWindowIcon(icon);
             Raylib.UnloadImage(icon);
             Raylib.SetTargetFPS(60);
+            GameDraw.InitBoardTexture(board);
             EnableDarkTitleBar();
 
             SoundManager.Play(SfxType.Start);
@@ -103,9 +96,11 @@ namespace PacManGame
                     ghost.RecordPreviousTile();
 
                 pacman.UpdateLoop(isFrozen);
-                if (board.RemainingDots == 0)
+               
+                if (board.isLevelFinished())
                 {
                     PacManAnimFrameIndex = 2;
+                    
                     switch (transitionState)
                     {
                         case LevelTransitionState.None:
@@ -165,20 +160,20 @@ namespace PacManGame
                         // DO WHATEVER WE NEED TO DO WHEN THE GAME ENDS
                         board.UpdateHighScore();
                         TimerManager.PauseAndReset(TimerType.GameOver);
-                        return;
+                        break;
                     }
                 }
 
                 timer.UpdateTimer(isFrozen);
                 TimerManager.Update();
 
+                // Off-screen board updates must happen outside BeginDrawing/EndDrawing
+                GameDraw.UpdateBoardTexture(board);
+
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
 
-                if (boardDrawnOnce)
-                    GameDraw.DrawBoardOnce(board);
-                else
-                    GameDraw.DrawBoard(board);
+                GameDraw.DrawBoard(board, !TimerManager.IsPaused(TimerType.LevelStart));
                 GameDraw.DrawFruit(fruit, board.LEVEL);
                 if (!playDeathAnim && !TimerManager.IsRunning(TimerType.StartTimer) && TimerManager.IsPaused(TimerType.LevelStart) && TimerManager.IsPaused(TimerType.GameOver))
                     GameDraw.DrawGhosts(ghosts, GhostAnimFrameIndex);
@@ -189,6 +184,7 @@ namespace PacManGame
                 Raylib.EndMode2D();
                 Raylib.EndDrawing();
             }
+            GameDraw.UnloadBoardTexture();
             Raylib.CloseWindow();
         }
 

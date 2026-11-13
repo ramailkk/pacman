@@ -196,7 +196,7 @@ namespace PacManGame
 
             if (tile.HasPowerPellet())
             {
-                tile.RemoveDotOrPellet();
+                board.ClearTile(tileX, tileY);
                 FreezeFramesRemaining = 3;
                 EatenDotCounter++;
                 EatenGhostsCounter = 0;
@@ -211,7 +211,7 @@ namespace PacManGame
             }
             else if (tile.HasDot())
             {
-                tile.RemoveDotOrPellet();
+                board.ClearTile(tileX, tileY);
                 FreezeFramesRemaining = 1;
                 EatenDotCounter++;
                 board.UpdateDotScore();
